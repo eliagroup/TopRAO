@@ -27,7 +27,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 
       - name: Set up Java and Maven cache
-        uses: ./.github/actions/setup-java
+        uses: ./.github/actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95
 
       - name: Run tests and generate coverage report
         shell: bash
