@@ -14,16 +14,26 @@ In its current state, the project can run a redispatch computation with open-rao
 
 ### Installation
 
-The mvn package command generates a shaded jar file. That is standalone and can be run in command line.
+Currently, this project uses a version of open-rao that is still in development : https://github.com/powsybl/powsybl-open-rao/tree/feature/cnec-creator-branch-names
 
-Generate the shaded jar :
+To install the project, you need to checkout that branch and build it locally.
 ```bash
-mvn package
+cd path/to/operao_parent # choose a folder for open-rao code
+git clone --branch cnec-creator-branch-names --single-branch https://github.com/powsybl/powsybl-open-rao.git
+cd powsybl-open-rao
+mvn install
 ```
 
 ---
 
 ## Usage
+
+The mvn package command generates a shaded jar file, which is portable and standalone.
+
+Generate the shaded jar from the TopRAO root dir:
+```bash
+mvn package
+```
 
 Once the shaded jar is generated it can be run in command line.
 
@@ -36,7 +46,7 @@ The requested inputs are :
 java -jar TopRao-1.3.1-SNAPSHOT-shaded.jar -g grid.xiidm -n n1_definition.json -o ./
 ```
 
-use help for the additional parameters :
+Use help for the additional parameters :
 
 ```bash
 java -jar TopRao-1.3.1-SNAPSHOT-shaded.jar --help
