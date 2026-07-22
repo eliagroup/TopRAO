@@ -35,6 +35,16 @@ Generate the shaded jar from the TopRAO root dir:
 mvn package
 ```
 
+Running a Maven build also configures the repository to use the versioned Git hooks from .githooks/.
+You can install the Git hook configuration explicitly with:
+```bash
+mvn git-build-hook:configure
+```
+
+---
+
+## Usage
+
 Once the shaded jar is generated it can be run in command line.
 
 The requested inputs are :
@@ -68,9 +78,7 @@ See [LICENSE](LICENSE)
 ---
 
 ## Contact
+Team – [ToOp](mailto:ToOp@eliagroup.eu)
 
-Project Lead – [Elia Fiftyheartz](elia@fiftyhertz.com) or elia(at)fiftyheartz(.)com
-
-Team – [Mike Blumentopf](mike@energytransmission.fr)
-
+If you require help with using this package, your first point of contact is <a href="mailto:ToOp@eliagroup.eu">ToOp@eliagroup.eu</a>.
 ---
