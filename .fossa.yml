@@ -12,5 +12,5 @@ paths:
     - "**/.venv/**"
 
 project:
-  name: "Topology Optimizer"
+  name: "TopRAO"
   team: "Sub-Chapter AI & Data Science"
