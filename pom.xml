@@ -242,23 +242,8 @@
         <dependencies>
             <dependency>
                 <groupId>com.powsybl</groupId>
-                <artifactId>powsybl-core</artifactId>
-                <version>${powsybl-core.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-            <dependency>
-                <groupId>com.powsybl</groupId>
                 <artifactId>powsybl-open-rao</artifactId>
                 <version>${openrao.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>com.powsybl</groupId>
-                <artifactId>powsybl-open-loadflow</artifactId>
-                <version>${powsybl-open-loadflow.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
