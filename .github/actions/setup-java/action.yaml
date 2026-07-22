@@ -12,7 +12,7 @@ runs:
   using: 'composite'
   steps:
     - name: Set up Java
-      uses: actions/setup-java@5eea775e2070c6de46ae15719118a8d76af3f79c
+      uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95
       with:
         distribution: temurin
         java-version: '21'
