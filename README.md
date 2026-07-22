@@ -1,69 +1,59 @@
-# 📦 Project Name
+# 📦 TopRAO
 
-## About The Project
-
-Briefly describe what the project does, its purpose, and any relevant context.  
-Include links to documentation, architecture diagrams, or related repositories if applicable.
+Remedial action optimization tool for large power grids, using ToOp for topology optimization and PowSyBl Open RAO for linear optimization (redispatch and PSTs). 
+In its current state, the project can run a redispatch computation with open-rao on ToOp output files.
 
 ---
 
 ## Getting Started
 
-Instructions to help developers get up and running quickly.
-
 ### Prerequisites
 
-List any software, libraries, or tools required before installation.
-
-```bash
-# Example
-node -v
-python3 --version
-```
+- Java 21
+- Maven 3.8 or higher
 
 ### Installation
 
-Step-by-step guide to install and configure the project locally.
+The mvn package command generates a shaded jar file. That is standalone and can be run in command line.
 
-
-# Example
-
+Generate the shaded jar :
+```bash
+mvn package
+```
 
 ---
 
 ## Usage
 
-Provide examples of how to run or use the project.  
-Include CLI commands, screenshots, or links to live demos if relevant.
+Once the shaded jar is generated it can be run in command line.
+
+The requested inputs are :
+- IIDM network file
+- n-1 definition json file in ToOp format
+- path for output files
 
 ```bash
-npm start
+java -jar TopRao-1.3.1-SNAPSHOT-shaded.jar -g grid.xiidm -n n1_definition.json -o ./
+```
+
+use help for the additional parameters :
+
+```bash
+java -jar TopRao-1.3.1-SNAPSHOT-shaded.jar --help
 ```
 
 ---
 
-## Roadmap
-
-Outline planned features, improvements, or milestones.  
-Use checkboxes for clarity:
-
-- [x] MVP
-- [ ] Add authentication
-- [ ] Multi-language support
-
----
 
 ## Contributing
 
-Refer to the mandatory [CONTRIBUTING.md](CONTRIBUTING.md)
+See [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ---
 
 ## License
 
-Specify the license under which the project is distributed.  
-Example: Distributed under the MIT License. See `LICENSE` for more information.
-
+See [LICENSE](LICENSE)
 
 ---
 
@@ -74,7 +64,3 @@ Project Lead – [Elia Fiftyheartz](elia@fiftyhertz.com) or elia(at)fiftyheartz(
 Team – [Mike Blumentopf](mike@energytransmission.fr)
 
 ---
-
-## Acknowledgments (if applicable)
-
-Credit any tools, libraries, contributors, or inspirations used in the project.

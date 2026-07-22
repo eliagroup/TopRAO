@@ -1,0 +1,12 @@
+{
+  "version" : "3.3",
+  "extensions" : {
+    "roda-parameters": {
+      "forced-preventive-actions-list": {
+        "version": "1.3",
+        "actions": [
+        ]
+      }
+    }
+  }
+}
