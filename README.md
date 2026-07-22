@@ -19,7 +19,7 @@ Currently, this project uses a version of open-rao that is still in development 
 To install the project, you need to checkout that branch and build it locally.
 ```bash
 cd path/to/operao_parent # choose a folder for open-rao code
-git clone --branch cnec-creator-branch-names --single-branch https://github.com/powsybl/powsybl-open-rao.git
+git clone --branch feature/cnec-creator-branch-names --single-branch https://github.com/powsybl/powsybl-open-rao.git
 cd powsybl-open-rao
 mvn install
 ```
