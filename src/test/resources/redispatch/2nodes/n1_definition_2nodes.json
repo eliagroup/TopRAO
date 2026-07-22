@@ -1,0 +1,48 @@
+{
+  "monitored_elements": [
+    {
+      "id": "FRANCE_BELGIUM_1",
+      "name": "France-Belgium interconnection n°1",
+      "type": "LINE",
+      "kind": "branch"
+    },
+    {
+      "id": "FRANCE_BELGIUM_2",
+      "name": "France-Belgium interconnection n°2",
+      "type": "LINE",
+      "kind": "branch"
+    }
+  ],
+  "contingencies": [
+    {
+      "elements": [],
+      "id": "BASECASE",
+      "name": ""
+    },
+    {
+      "elements": [
+        {
+          "id": "FRANCE_BELGIUM_1",
+          "name": "France-Belgium interconnection n°1",
+          "type": "LINE",
+          "kind": "branch"
+        }
+      ],
+      "id": "CO_FRANCE_BELGIUM_1",
+      "name": "CO France-Belgium interconnection n°1"
+    },
+    {
+      "elements": [
+        {
+          "id": "FRANCE_BELGIUM_2",
+          "name": "France-Belgium interconnection n°2",
+          "type": "LINE",
+          "kind": "branch"
+        }
+      ],
+      "id": "CO_FRANCE_BELGIUM_2",
+      "name": "CO France-Belgium interconnection n°2"
+    }
+  ],
+  "id_type": null
+}
