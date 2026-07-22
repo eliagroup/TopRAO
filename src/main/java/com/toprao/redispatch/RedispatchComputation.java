@@ -55,7 +55,7 @@ public final class RedispatchComputation {
 
     private static final String RAO_SUMMARY_FILE = "rao_summary.json";
 
-    public static int CPUS_COUNT = 1;
+    public static final int CPUS_COUNT = 1;
 
     public static void compute(@NonNull Network network,
                                @NonNull ToOpN1Definition n1Definition,
