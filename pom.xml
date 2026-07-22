@@ -31,9 +31,7 @@
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <powsybl-core.version>7.2.1</powsybl-core.version>
-        <powsybl-open-loadflow.version>2.2.1</powsybl-open-loadflow.version>
-        <openrao.version>7.3.0-SNAPSHOT</openrao.version>
+        <openrao.version>7.4.0-SNAPSHOT</openrao.version>
         <lombok.version>1.18.46</lombok.version>
         <checkstyle.version>11.0.0</checkstyle.version>
         <checkstyle.plugin.version>3.6.0</checkstyle.plugin.version>
@@ -44,6 +42,7 @@
         <scala.binary.version>2.12</scala.binary.version>
         <slf4j.version>2.0.17</slf4j.version>
         <logback-classic.version>1.5.26</logback-classic.version>
+        <junit-jupiter.version>5.12.2</junit-jupiter.version>
     </properties>
 
     <build>
@@ -177,23 +176,8 @@
         <dependencies>
             <dependency>
                 <groupId>com.powsybl</groupId>
-                <artifactId>powsybl-core</artifactId>
-                <version>${powsybl-core.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-            <dependency>
-                <groupId>com.powsybl</groupId>
                 <artifactId>powsybl-open-rao</artifactId>
                 <version>${openrao.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>com.powsybl</groupId>
-                <artifactId>powsybl-open-loadflow</artifactId>
-                <version>${powsybl-open-loadflow.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -300,11 +284,10 @@
         </dependency>
 
         <dependency>
-            <groupId>org.junit</groupId>
-            <artifactId>junit-bom</artifactId>
-            <version>5.13.4</version>
-            <type>pom</type>
-            <scope>compile</scope>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${junit-jupiter.version}</version>
+            <scope>test</scope>
         </dependency>
 
         <!-- Parquet core -->
