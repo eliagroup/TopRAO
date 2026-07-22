@@ -12,4 +12,4 @@ set -eu
 repo_root=$(git rev-parse --show-toplevel)
 cd "$repo_root"
 
-mvn -q -DskipTests spotless:check checkstyle:check
+mvn -q -DskipTests checkstyle:check

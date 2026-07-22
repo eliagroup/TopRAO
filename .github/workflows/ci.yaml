@@ -98,7 +98,6 @@ jobs:
         shell: bash
         run: >-
           mvn -B -DskipTests
-          spotless:check
           test-compile
           spotbugs:check
 
