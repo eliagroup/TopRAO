@@ -1,5 +1,15 @@
+/*
+ * Copyright 2026 50Hertz Transmission GmbH and Elia Transmission Belgium SA/NV
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file,
+ * you can obtain one at https://mozilla.org/MPL/2.0/.
+ * Mozilla Public License, version 2.0
+ */
+
 package com.toprao.toop.data;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.toprao.JsonUtils;
 import lombok.Getter;
@@ -14,22 +24,22 @@ import java.util.Objects;
 
 @Getter
 public class ToOpN1Definition {
-    @JsonProperty("monitored_elements")
-    private List<ToOpGridElement> monitoredElements;
 
-    @JsonProperty("contingencies")
-    private List<ToOpContingency> contingencies;
+    private final List<ToOpGridElement> monitoredElements;
+    private final List<ToOpContingency> contingencies;
+    private final String idType;
 
-    @JsonProperty("id_type")
-    private String idType;
-
-    public ToOpN1Definition(List<ToOpGridElement> monitoredElements, List<ToOpContingency> contingencies, String idType) {
-        this.monitoredElements = monitoredElements;
-        this.contingencies = contingencies;
+    @JsonCreator
+    public ToOpN1Definition(@JsonProperty("monitored_elements") List<ToOpGridElement> monitoredElements,
+                            @JsonProperty("contingencies") List<ToOpContingency> contingencies,
+                            @JsonProperty("id_type") String idType) {
+        this.monitoredElements = List.copyOf(monitoredElements);
+        this.contingencies = List.copyOf(contingencies);
         this.idType = idType;
     }
 
-    public ToOpN1Definition() {
+    public ToOpN1Definition(ToOpN1Definition n1Definition) {
+        this(n1Definition.getMonitoredElements(), n1Definition.getContingencies(), n1Definition.getIdType());
     }
 
     public static ToOpN1Definition read(Path filePath) {

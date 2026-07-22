@@ -1,0 +1,169 @@
+# Copyright 2026 50Hertz Transmission GmbH and Elia Transmission Belgium SA/NV
+#
+# This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+# If a copy of the MPL was not distributed with this file,
+# you can obtain one at https://mozilla.org/MPL/2.0/.
+# Mozilla Public License, version 2.0
+
+name: Continuous Integration
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions: {}
+
+jobs:
+
+  tests:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
+      - name: Set up Java and Maven cache
+        uses: ./.github/actions/setup-java
+
+      - name: Run tests and generate coverage report
+        shell: bash
+        run: mvn -B verify
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4
+        with:
+          name: coverage
+          path: target/site/jacoco/
+          retention-days: 7
+
+  sonarqube:
+    needs: [tests]
+    if: success()
+    permissions:
+      contents: read
+      pull-requests: read
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          fetch-depth: 0
+
+      - name: Set up Java and Maven cache
+        uses: ./.github/actions/setup-java
+
+      - name: Download coverage report
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4
+        with:
+          name: coverage
+          path: target/site/jacoco/
+
+      - name: Build and run SonarQube analysis
+        shell: bash
+        run: >-
+          mvn -B -DskipTests package
+          org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
+          -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+        env:
+          SONAR_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
+      # Check the Quality Gate status.
+      - name: SonarQube Quality Gate check
+        id: sonarqube-quality-gate-check
+        uses: sonarsource/sonarqube-quality-gate-action@cf038b0e0cdecfa9e56c198bbb7d21d751d62c3b
+        with:
+          pollingTimeoutSec: 600
+          scanMetadataReportFile: target/sonar/report-task.txt
+        env:
+          SONAR_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
+  code-quality-checks:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
+      - name: Set up Java and Maven cache
+        uses: ./.github/actions/setup-java
+
+      - name: Run Java code quality checks
+        shell: bash
+        run: >-
+          mvn -B -DskipTests
+          test-compile
+          spotbugs:check
+
+  license-headers:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
+      - name: License Header Check
+        uses: B1NARY-GR0UP/nwa@3e1823c61ba2818a156c77b4eedc7905d6a8557c
+        with:
+          version: latest # (optional) version of nwa to use; default: latest
+          cmd: check # (optional) command to execute; options: `check`, `add`, `update`, `remove`; default: check
+          path: .nwa-config.yaml # (optional) configuration file path; default: .nwa-config.yaml
+
+  fossa-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
+      - id: fossa-analyze
+        uses: fossas/fossa-action@c414b9ad82eaad041e47a7cf62a4f02411f427a0 # Use a specific version if locking is preferred
+        with:
+          api-key: ${{secrets.FOSSA_API_KEY}}
+          run-tests: false # Add another run with run-tests: true if ci should fail on issues
+
+      - id: fossa-test
+        uses: fossas/fossa-action@c414b9ad82eaad041e47a7cf62a4f02411f427a0 # Use a specific version if locking is preferred
+        with:
+          api-key: ${{secrets.FOSSA_API_KEY}}
+          run-tests: true # Add another run with run-tests: true if ci should fail on issues
+
+  ci-success-check:
+    needs:
+      [
+        code-quality-checks,
+        fossa-scan,
+        license-headers,
+        sonarqube,
+        tests,
+      ]
+    if: always()
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check all job results
+        run: |
+          echo "Code Quality: ${{ needs.code-quality-checks.result }}"
+          echo "FOSSA Scan: ${{ needs.fossa-scan.result }}"
+          echo "License Headers: ${{ needs.license-headers.result }}"
+          echo "SonarQube: ${{ needs.sonarqube.result }}"
+          echo "Tests: ${{ needs.tests.result }}"
+
+          if [[ "${{ needs.code-quality-checks.result }}" != "success" ]] || \
+             [[ "${{ needs.fossa-scan.result }}" != "success" ]] || \
+             [[ "${{ needs.license-headers.result }}" != "success" ]] || \
+             [[ "${{ needs.sonarqube.result }}" != "success" ]] || \
+             [[ "${{ needs.tests.result }}" != "success" ]]; then
+            echo "One or more CI jobs failed, were cancelled, or skipped. Marking as failed."
+            exit 1
+          fi
+          echo "All CI jobs succeeded."

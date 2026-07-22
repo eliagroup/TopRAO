@@ -1,3 +1,12 @@
+/*
+ * Copyright 2026 50Hertz Transmission GmbH and Elia Transmission Belgium SA/NV
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file,
+ * you can obtain one at https://mozilla.org/MPL/2.0/.
+ * Mozilla Public License, version 2.0
+ */
+
 package com.toprao.redispatch;
 
 import com.powsybl.action.Action;
@@ -46,7 +55,7 @@ public final class RedispatchComputation {
 
     private static final String RAO_SUMMARY_FILE = "rao_summary.json";
 
-    public static int CPUS_COUNT = 1;
+    public static final int CPUS_COUNT = 1;
 
     public static void compute(@NonNull Network network,
                                @NonNull ToOpN1Definition n1Definition,
@@ -82,7 +91,9 @@ public final class RedispatchComputation {
 
         addRodaParameters(raoParameters, forcedActions);
         if (resultsPath != null) {
-            resultsPath.toFile().mkdirs();
+            if (resultsPath.toFile().mkdirs()) {
+                log.debug("Created results directory {}", resultsPath);
+            }
             lfResult.write(resultsPath.resolve("toop_lf_result.json"));
         }
 
@@ -104,7 +115,7 @@ public final class RedispatchComputation {
 
         List<ActionSummary> actionSummaries = crac.getStates(crac.getInstant("preventive")).stream()
             .flatMap(state -> result.getActivatedRangeActionsDuringState(state)
-                        .stream().map(a -> toActionSummary(a, result, state)))
+            .stream().map(a -> toActionSummary(a, result, state)))
             .toList();
 
         FastRaoResultImpl timestampResult = (FastRaoResultImpl) result.getIndividualRaoResult(dt);
@@ -187,6 +198,6 @@ public final class RedispatchComputation {
         var saResult = new SecurityAnalysisRunner().run(network, n1Definition, CPUS_COUNT);
         List<PostContingencyResult> nonConvergedResults = saResult.getPostContingencyResults().stream().filter(r -> r.getStatus() != PostContingencyComputationStatus.CONVERGED).toList();
         log.info("Security analysis run finished with {} non converged contingencies", nonConvergedResults.size());
-        return new SaResultsConverter(network).convert(saResult).lfResult();
+        return new SaResultsConverter().convertResults(saResult, network);
     }
 }
