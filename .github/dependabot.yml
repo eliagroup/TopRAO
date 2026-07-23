@@ -13,9 +13,13 @@ updates:
       interval: "weekly"
     cooldown:
       default-days: 10
+    commit-message:
+      prefix: "bump"
   - package-ecosystem: "maven"
     directory: "/"
     schedule:
       interval: "weekly"
     cooldown:
       default-days: 10
+    commit-message:
+      prefix: "bump"
