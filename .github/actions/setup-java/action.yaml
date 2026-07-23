@@ -17,3 +17,16 @@ runs:
         distribution: temurin
         java-version: '21'
         cache: maven
+
+# Temporary : install the needed snapshot of open-rao
+    - name: Checkout Open RAO
+      uses: actions/checkout@v4
+      with:
+        repository: powsybl/powsybl-open-rao
+        ref: feature/cnec-creator-branch-names
+        path: open-rao
+
+    - name: Install Open RAO
+      shell: bash
+      working-directory: open-rao
+      run: mvn -q clean install
