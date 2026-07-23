@@ -43,7 +43,7 @@
         <spotbugs.plugin.version>4.9.7.0</spotbugs.plugin.version>
         <spark.version>3.5.0</spark.version>
         <scala.binary.version>2.12</scala.binary.version>
-        <slf4j.version>2.0.17</slf4j.version>
+        <slf4j.version>2.0.18</slf4j.version>
         <logback-classic.version>1.5.34</logback-classic.version>
         <junit-jupiter.version>5.12.2</junit-jupiter.version>
     </properties>
