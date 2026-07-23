@@ -1,3 +1,12 @@
+/*
+ * Copyright 2026 50Hertz Transmission GmbH and Elia Transmission Belgium SA/NV
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file,
+ * you can obtain one at https://mozilla.org/MPL/2.0/.
+ * Mozilla Public License, version 2.0
+ */
+
 package com.toprao.sa;
 
 import com.powsybl.contingency.Contingency;
@@ -28,7 +37,12 @@ public class N1DefSaInputsConverter {
 
     private final Network network;
 
-    public record SaInputs(List<Contingency> contingencies, List<StateMonitor> stateMonitors) { }
+    public record SaInputs(List<Contingency> contingencies, List<StateMonitor> stateMonitors) {
+        public SaInputs {
+            contingencies = List.copyOf(contingencies);
+            stateMonitors = List.copyOf(stateMonitors);
+        }
+    }
 
     N1DefSaInputsConverter(Network network) {
         this.network = network;
@@ -76,5 +90,3 @@ public class N1DefSaInputsConverter {
         return null;
     }
 }
-
-

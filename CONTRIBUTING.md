@@ -29,4 +29,3 @@ $ git commit -s -m 'This is my commit message'
 ````
 
 Please note: Checks will be performed during integration to ensure that all commits in a Pull Request include a valid `Signed-off-by` line.
-
