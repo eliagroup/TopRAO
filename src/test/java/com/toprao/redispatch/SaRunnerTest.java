@@ -39,7 +39,7 @@ public class SaRunnerTest {
         ToOpN1Definition n1Definition = ToOpN1Definition.readFromInputStream(SaRunnerTest.class.getResourceAsStream("/redispatch/2nodes/n1_definition_2nodes.json"));
 
         SecurityAnalysisResult saResult = new SecurityAnalysisRunner().run(network, n1Definition);
-        ToOpLfResult lfResult = new SaResultsConverter(network).convert(saResult).lfResult();
+        ToOpLfResult lfResult = new SaResultsConverter().convertResults(saResult, network);
 
         assertThat(lfResult.getResults()).hasSize(4);
         assertLfResult(lfResult, "BASECASE", "FRANCE_BELGIUM_1", 1, -266.6666, 0.5333518541025759);
@@ -58,7 +58,7 @@ public class SaRunnerTest {
                 new StateMonitor(ContingencyContext.all(), Set.of("FRANCE_BELGIUM_2"), Set.of(), Set.of()));
 
         SecurityAnalysisResult saResult = new SecurityAnalysisRunner().run(network, contingencies, stateMonitors, SecurityAnalysisRunner.createLfParameters(), 1);
-        ToOpLfResult lfResult = new SaResultsConverter(network).convert(saResult).lfResult();
+        ToOpLfResult lfResult = new SaResultsConverter().convertResults(saResult, network);
 
         assertThat(lfResult.getResults()).hasSize(4);
         assertLfResult(lfResult, "BASECASE", "FRANCE_BELGIUM_1", 1, -266.6666, 0.5333518541025759);
@@ -76,7 +76,8 @@ public class SaRunnerTest {
                 new StateMonitor(ContingencyContext.all(), Set.of("FRANCE_BELGIUM_2"), Set.of(), Set.of()));
 
         SecurityAnalysisResult saResult = new SecurityAnalysisRunner().run(network, contingencies, stateMonitors, SecurityAnalysisRunner.createLfParameters(), 1);
-        ToOpN1Definition convertedN1Def = new SaResultsConverter(network).convert(saResult).n1Definition();
+        ToOpLfResult toOpLfResult = new SaResultsConverter().convertResults(saResult, network);
+        ToOpN1Definition convertedN1Def = new SaResultsConverter().convertN1Definition(saResult, toOpLfResult);
 
         assertThat(convertedN1Def.getMonitoredElements()).hasSize(2);
         assertThat(convertedN1Def.getContingencies()).hasSize(3);

@@ -37,7 +37,12 @@ public class N1DefSaInputsConverter {
 
     private final Network network;
 
-    public record SaInputs(List<Contingency> contingencies, List<StateMonitor> stateMonitors) { }
+    public record SaInputs(List<Contingency> contingencies, List<StateMonitor> stateMonitors) {
+        public SaInputs {
+            contingencies = List.copyOf(contingencies);
+            stateMonitors = List.copyOf(stateMonitors);
+        }
+    }
 
     N1DefSaInputsConverter(Network network) {
         this.network = network;

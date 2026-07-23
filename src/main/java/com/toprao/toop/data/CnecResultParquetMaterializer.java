@@ -28,7 +28,7 @@ public class CnecResultParquetMaterializer extends RecordMaterializer<ToOpCnecRe
     private final ToOpCnecResultGroupConverter root;
 
     public CnecResultParquetMaterializer(MessageType schema, Class<ToOpCnecResult> recordClass) {
-        this.root = new ToOpCnecResultGroupConverter(schema, recordClass);
+        this.root = ToOpCnecResultGroupConverter.create(schema, recordClass);
     }
 
     @Override public ToOpCnecResult getCurrentRecord() {
@@ -53,57 +53,50 @@ public class CnecResultParquetMaterializer extends RecordMaterializer<ToOpCnecRe
         }
     }
 
-    static class ToOpCnecResultGroupConverter extends GroupConverter {
+    static final class ToOpCnecResultGroupConverter extends GroupConverter {
         private final FieldSlot[] slots;
         private final Converter[] converters;
         private final Constructor<ToOpCnecResult> ctor;
         private final String[] ctorParamNames; // index -> name
         private Object currentRecord;
 
-        ToOpCnecResultGroupConverter(MessageType schema, Class<ToOpCnecResult> recordClass) {
+        static ToOpCnecResultGroupConverter create(MessageType schema, Class<ToOpCnecResult> recordClass) {
+            Constructor<ToOpCnecResult> ctor = findCtor(recordClass, schema.getFields().size());
+            return new ToOpCnecResultGroupConverter(schema, ctor);
+        }
+
+        private static Constructor<ToOpCnecResult> findCtor(Class<ToOpCnecResult> recordClass, int paramCount) {
+            for (Constructor<?> c : recordClass.getConstructors()) {
+                if (c.getParameterCount() == paramCount) {
+                    @SuppressWarnings("unchecked")
+                    Constructor<ToOpCnecResult> cc = (Constructor<ToOpCnecResult>) c;
+                    return cc;
+                }
+            }
+            throw new IllegalArgumentException("No matching constructor found for record");
+        }
+
+        private ToOpCnecResultGroupConverter(MessageType schema, Constructor<ToOpCnecResult> ctor) {
             List<Type> fields = schema.getFields();
             this.slots = new FieldSlot[fields.size()];
             this.converters = new Converter[fields.size()];
-
             for (int i = 0; i < fields.size(); i++) {
                 Type t = fields.get(i);
-                String name = t.getName();
                 PrimitiveTypeName pt = t.asPrimitiveType().getPrimitiveTypeName();
-                slots[i] = new FieldSlot(name, pt);
-                if (pt == PrimitiveTypeName.DOUBLE) {
-                    converters[i] = new DoubleConverter(slots[i]);
-                } else if (pt == PrimitiveTypeName.INT32) {
-                    converters[i] = new IntConverter(slots[i]);
-                } else if (pt == PrimitiveTypeName.INT64) {
-                    converters[i] = new LongConverter(slots[i]);
-                } else {
-                    converters[i] = new StringConverter(slots[i]);
-                }
+                slots[i] = new FieldSlot(t.getName(), pt);
+                converters[i] = switch (pt) {
+                    case DOUBLE -> new DoubleConverter(slots[i]);
+                    case INT32 -> new IntConverter(slots[i]);
+                    case INT64 -> new LongConverter(slots[i]);
+                    default -> new StringConverter(slots[i]);
+                };
             }
 
-            // find canonical constructor for record and parameter names (cache)
-            try {
-                Constructor<ToOpCnecResult> found = null;
-                for (Constructor<?> c : recordClass.getConstructors()) {
-                    if (c.getParameterCount() == fields.size()) {
-                        // assume this is the canonical constructor
-                        @SuppressWarnings("unchecked")
-                        Constructor<ToOpCnecResult> cc = (Constructor<ToOpCnecResult>) c;
-                        found = cc;
-                        break;
-                    }
-                }
-                if (found == null) {
-                    throw new RuntimeException("No matching constructor found for record");
-                }
-                this.ctor = found;
-                Parameter[] params = ctor.getParameters();
-                this.ctorParamNames = new String[params.length];
-                for (int i = 0; i < params.length; i++) {
-                    ctorParamNames[i] = params[i].getName();
-                }
-            } catch (Exception e) {
-                throw new RuntimeException(e);
+            this.ctor = ctor;
+            Parameter[] params = ctor.getParameters();
+            this.ctorParamNames = new String[params.length];
+            for (int i = 0; i < params.length; i++) {
+                ctorParamNames[i] = params[i].getName();
             }
         }
 

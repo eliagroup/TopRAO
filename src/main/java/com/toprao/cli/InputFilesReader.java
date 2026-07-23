@@ -88,16 +88,17 @@ public final class InputFilesReader {
             throw new UncheckedIOException(e);
         }
 
-        String raoParamsWithActions = String.format("""
-                {
-                  "version" : "3.4",
-                  "extensions" : {
-                      "roda-parameters": {
-                        "forced-preventive-actions-list": %s
-                      }
-                  }
-                }
-                """, actionsListString);
+        String raoParamsWithActions = String.format(
+                "{%n" +
+                "  \"version\" : \"3.4\",%n" +
+                "  \"extensions\" : {%n" +
+                "      \"roda-parameters\": {%n" +
+                "        \"forced-preventive-actions-list\": %s%n" +
+                "      }%n" +
+                "  }%n" +
+                "}%n",
+                actionsListString
+        );
 
         InputStream stream = new ByteArrayInputStream(raoParamsWithActions.getBytes(StandardCharsets.UTF_8));
 

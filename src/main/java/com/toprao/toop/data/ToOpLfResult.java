@@ -77,7 +77,7 @@ public class ToOpLfResult {
     }
 
     public ToOpLfResult(List<ToOpCnecResult> results) {
-        this.results = results;
+        this.results = List.copyOf(results);
         indexResults();
     }
 

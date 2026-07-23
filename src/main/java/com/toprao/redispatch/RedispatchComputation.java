@@ -91,7 +91,9 @@ public final class RedispatchComputation {
 
         addRodaParameters(raoParameters, forcedActions);
         if (resultsPath != null) {
-            resultsPath.toFile().mkdirs();
+            if (resultsPath.toFile().mkdirs()) {
+                log.debug("Created results directory {}", resultsPath);
+            }
             lfResult.write(resultsPath.resolve("toop_lf_result.json"));
         }
 
@@ -113,7 +115,7 @@ public final class RedispatchComputation {
 
         List<ActionSummary> actionSummaries = crac.getStates(crac.getInstant("preventive")).stream()
             .flatMap(state -> result.getActivatedRangeActionsDuringState(state)
-                        .stream().map(a -> toActionSummary(a, result, state)))
+            .stream().map(a -> toActionSummary(a, result, state)))
             .toList();
 
         FastRaoResultImpl timestampResult = (FastRaoResultImpl) result.getIndividualRaoResult(dt);
@@ -196,6 +198,6 @@ public final class RedispatchComputation {
         var saResult = new SecurityAnalysisRunner().run(network, n1Definition, CPUS_COUNT);
         List<PostContingencyResult> nonConvergedResults = saResult.getPostContingencyResults().stream().filter(r -> r.getStatus() != PostContingencyComputationStatus.CONVERGED).toList();
         log.info("Security analysis run finished with {} non converged contingencies", nonConvergedResults.size());
-        return new SaResultsConverter(network).convert(saResult).lfResult();
+        return new SaResultsConverter().convertResults(saResult, network);
     }
 }

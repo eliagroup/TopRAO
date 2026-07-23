@@ -34,22 +34,16 @@ import java.util.stream.Collectors;
 
 public class SaResultsConverter {
 
-    public record ToOpFullSaResult(ToOpN1Definition n1Definition, ToOpLfResult lfResult) { }
-
-    private final Network network;
-
-    public SaResultsConverter(Network network) {
-        this.network = network;
+    public SaResultsConverter() {
     }
 
-    public ToOpFullSaResult convert(SecurityAnalysisResult saResult) {
-        List<ToOpCnecResult> cnecResults = convertCnecs(saResult);
-        ToOpN1Definition n1Definition = convertN1Definition(saResult, cnecResults);
-        return new ToOpFullSaResult(n1Definition, new ToOpLfResult(cnecResults));
+    public ToOpLfResult convertResults(SecurityAnalysisResult saResult, Network network) {
+        List<ToOpCnecResult> cnecResults = convertCnecs(saResult, network);
+        return new ToOpLfResult(cnecResults);
     }
 
-    private ToOpN1Definition convertN1Definition(SecurityAnalysisResult saResult, List<ToOpCnecResult> cnecResults) {
-        Set<String> monitoredElementIds = cnecResults.stream().map(r -> r.element()).collect(Collectors.toSet());
+    public ToOpN1Definition convertN1Definition(SecurityAnalysisResult saResult, ToOpLfResult toOpLfResult) {
+        Set<String> monitoredElementIds = toOpLfResult.getResults().stream().map(r -> r.element()).collect(Collectors.toSet());
 
         // Using powsybl contingencies to know the elements affected by the contingency (we don't have this in ToOpCnecResult)
         Set<Contingency> powsyblContingencies = saResult.getPostContingencyResults().stream().map(r -> r.getContingency()).collect(Collectors.toSet());
@@ -69,24 +63,24 @@ public class SaResultsConverter {
         return new ToOpContingency(contingency.getId(), contingency.getName().orElse(null), gridElements);
     }
 
-    private List<ToOpCnecResult> convertCnecs(SecurityAnalysisResult saResult) {
-        List<ToOpCnecResult> cnecResults = new ArrayList<>(convertCnecs("BASECASE", saResult.getPreContingencyResult().getNetworkResult()));
-        saResult.getPostContingencyResults().forEach(r -> cnecResults.addAll(convertCnecs(r.getContingency().getId(), r.getNetworkResult())));
+    private List<ToOpCnecResult> convertCnecs(SecurityAnalysisResult saResult, Network network) {
+        List<ToOpCnecResult> cnecResults = new ArrayList<>(convertCnecs("BASECASE", saResult.getPreContingencyResult().getNetworkResult(), network));
+        saResult.getPostContingencyResults().forEach(r -> cnecResults.addAll(convertCnecs(r.getContingency().getId(), r.getNetworkResult(), network)));
         return cnecResults;
     }
 
-    private List<ToOpCnecResult> convertCnecs(String contingencyId, NetworkResult networkResult) {
-        return networkResult.getBranchResults().stream().map(br -> convertCnec(contingencyId, br)).toList();
+    private List<ToOpCnecResult> convertCnecs(String contingencyId, NetworkResult networkResult, Network network) {
+        return networkResult.getBranchResults().stream().map(br -> convertCnec(contingencyId, br, network)).toList();
     }
 
-    private ToOpCnecResult convertCnec(String contingencyId, BranchResult branchResult) {
-        Branch<?> branch = getBranch(branchResult);
+    private ToOpCnecResult convertCnec(String contingencyId, BranchResult branchResult, Network network) {
+        Branch<?> branch = getBranch(branchResult, network);
         double branchLoading1 = getBranchLoading1(branch, branchResult);
         double branchLoading = Double.isNaN(branchLoading1) ? getBranchLoading2(branch, branchResult) : branchLoading1;
         return new ToOpCnecResult(branchResult.getBranchId(), contingencyId, 1, branchLoading, branchResult.getP1());
     }
 
-    private Branch<?> getBranch(BranchResult branchResult) {
+    private Branch<?> getBranch(BranchResult branchResult, Network network) {
         Branch<?> branch = network.getBranch(branchResult.getBranchId());
         if (branch != null) {
             return branch;
