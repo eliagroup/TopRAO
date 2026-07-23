@@ -127,13 +127,13 @@ jobs:
       - id: fossa-analyze
         uses: fossas/fossa-action@29693cc50323968e039056be419b32989fc5880c # Use a specific version if locking is preferred
         with:
-          api-key: ${{secrets.FOSSA_API_KEY}}
+          api-key: ${{ secrets.FOSSA_API_KEY }}
           run-tests: false # Add another run with run-tests: true if ci should fail on issues
 
       - id: fossa-test
         uses: fossas/fossa-action@29693cc50323968e039056be419b32989fc5880c # Use a specific version if locking is preferred
         with:
-          api-key: ${{secrets.FOSSA_API_KEY}}
+          api-key: ${{ secrets.FOSSA_API_KEY }}
           run-tests: true # Add another run with run-tests: true if ci should fail on issues
 
   ci-success-check:
