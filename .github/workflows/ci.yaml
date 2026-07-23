@@ -125,15 +125,15 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 
       - id: fossa-analyze
-        uses: fossas/fossa-action@c414b9ad82eaad041e47a7cf62a4f02411f427a0 # Use a specific version if locking is preferred
+        uses: fossas/fossa-action@29693cc50323968e039056be419b32989fc5880c # Use a specific version if locking is preferred
         with:
-          api-key: ${{secrets.FOSSA_API_KEY}}
+          api-key: ${{ secrets.FOSSA_API_KEY }}
           run-tests: false # Add another run with run-tests: true if ci should fail on issues
 
       - id: fossa-test
-        uses: fossas/fossa-action@c414b9ad82eaad041e47a7cf62a4f02411f427a0 # Use a specific version if locking is preferred
+        uses: fossas/fossa-action@29693cc50323968e039056be419b32989fc5880c # Use a specific version if locking is preferred
         with:
-          api-key: ${{secrets.FOSSA_API_KEY}}
+          api-key: ${{ secrets.FOSSA_API_KEY }}
           run-tests: true # Add another run with run-tests: true if ci should fail on issues
 
   ci-success-check:
