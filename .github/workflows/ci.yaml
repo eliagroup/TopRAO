@@ -125,12 +125,14 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 
       - id: fossa-analyze
+        if: github.actor != 'dependabot[bot]' # actions on dependabot PRs run in restricted context and cannot access secrets
         uses: fossas/fossa-action@29693cc50323968e039056be419b32989fc5880c # Use a specific version if locking is preferred
         with:
           api-key: ${{ secrets.FOSSA_API_KEY }}
           run-tests: false # Add another run with run-tests: true if ci should fail on issues
 
       - id: fossa-test
+        if: github.actor != 'dependabot[bot]' # actions on dependabot PRs run in restricted context and cannot access secrets
         uses: fossas/fossa-action@29693cc50323968e039056be419b32989fc5880c # Use a specific version if locking is preferred
         with:
           api-key: ${{ secrets.FOSSA_API_KEY }}
