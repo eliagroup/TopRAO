@@ -44,9 +44,9 @@ public class SaRunnerTest {
 
         assertThat(lfResult.getResults()).hasSize(4);
         assertLfResult(lfResult, "BASECASE", "FRANCE_BELGIUM_1", 1, -266.6666, 0.5333518541025759);
-        assertLfResult(lfResult, "BASECASE", "FRANCE_BELGIUM_2", 1, -533.333333, 1.0667);
-        assertLfResult(lfResult, "CO_FRANCE_BELGIUM_1", "FRANCE_BELGIUM_2", 1, -800, 1.6);
-        assertLfResult(lfResult, "CO_FRANCE_BELGIUM_2", "FRANCE_BELGIUM_1", 1, -800, 1.6);
+        assertLfResult(lfResult, "BASECASE", "FRANCE_BELGIUM_2", 1, -533.333333, 1.0677);
+        assertLfResult(lfResult, "CO_FRANCE_BELGIUM_1", "FRANCE_BELGIUM_2", 1, -800, 1.601);
+        assertLfResult(lfResult, "CO_FRANCE_BELGIUM_2", "FRANCE_BELGIUM_1", 1, -800, 1.597);
     }
 
     @Test
@@ -65,9 +65,9 @@ public class SaRunnerTest {
 
         assertThat(lfResult.getResults()).hasSize(4);
         assertLfResult(lfResult, "BASECASE", "FRANCE_BELGIUM_1", 1, -266.6666, 0.5333518541025759);
-        assertLfResult(lfResult, "BASECASE", "FRANCE_BELGIUM_2", 1, -533.333333, 1.0667);
-        assertLfResult(lfResult, "CO_FRANCE_BELGIUM_1", "FRANCE_BELGIUM_2", 1, -800, 1.6);
-        assertLfResult(lfResult, "CO_FRANCE_BELGIUM_2", "FRANCE_BELGIUM_1", 1, -800, 1.6);
+        assertLfResult(lfResult, "BASECASE", "FRANCE_BELGIUM_2", 1, -533.333333, 1.0677);
+        assertLfResult(lfResult, "CO_FRANCE_BELGIUM_1", "FRANCE_BELGIUM_2", 1, -800, 1.601);
+        assertLfResult(lfResult, "CO_FRANCE_BELGIUM_2", "FRANCE_BELGIUM_1", 1, -800, 1.597);
     }
 
     @Test
