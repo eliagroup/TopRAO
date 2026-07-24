@@ -18,6 +18,7 @@ import com.toprao.cli.RedispatchCliOptions;
 import com.toprao.crac.CracGenerationParameters;
 import com.toprao.redispatch.RaoParametersFactory;
 import com.toprao.redispatch.RedispatchComputation;
+import com.toprao.redispatch.result.RaoSummary;
 import com.toprao.toop.data.ToOpLfResult;
 import com.toprao.toop.data.ToOpN1Definition;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +27,8 @@ import java.nio.file.Path;
 
 @Slf4j
 public final class Main {
+
+    private static final String RAO_SUMMARY_FILE = "rao_summary.json";
 
     private Main() { }
 
@@ -60,12 +63,19 @@ public final class Main {
             cracGenerationParameters = new CracGenerationParameters();
         }
 
+        Path resultsPath = Path.of(opts.outputPath());
+        if (resultsPath.toFile().mkdirs()) {
+            log.debug("Created results directory {}", resultsPath);
+        }
+
+        RaoSummary raoSummary;
         if (opts.lfResultsFilePath().isPresent()) {
             ToOpLfResult lfResult = InputFilesReader.readLfResult(opts.lfResultsFilePath().get());
-            RedispatchComputation.compute(network, n1Definition, lfResult, forcedActions, raoParameters, cracGenerationParameters, Path.of(opts.outputPath()));
+            raoSummary = RedispatchComputation.compute(network, n1Definition, lfResult, forcedActions, raoParameters, cracGenerationParameters);
         } else {
-            RedispatchComputation.compute(network, n1Definition, forcedActions, raoParameters, cracGenerationParameters, Path.of(opts.outputPath()));
+            raoSummary = RedispatchComputation.compute(network, n1Definition, forcedActions, raoParameters, cracGenerationParameters);
         }
+        raoSummary.write(resultsPath.resolve(RAO_SUMMARY_FILE));
     }
 
 }

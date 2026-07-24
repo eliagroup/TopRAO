@@ -26,6 +26,7 @@ import com.toprao.utils.TestAssertUtils;
 import org.assertj.core.data.Offset;
 import org.junit.jupiter.api.Test;
 
+import java.nio.file.Path;
 import java.text.MessageFormat;
 import java.util.List;
 import java.util.Set;
@@ -59,6 +60,8 @@ public class SaRunnerTest {
 
         SecurityAnalysisResult saResult = new SecurityAnalysisRunner().run(network, contingencies, stateMonitors, SecurityAnalysisRunner.createLfParameters(), 1);
         ToOpLfResult lfResult = new SaResultsConverter().convertResults(saResult, network);
+
+        lfResult.write(Path.of("branch_results.json"));
 
         assertThat(lfResult.getResults()).hasSize(4);
         assertLfResult(lfResult, "BASECASE", "FRANCE_BELGIUM_1", 1, -266.6666, 0.5333518541025759);

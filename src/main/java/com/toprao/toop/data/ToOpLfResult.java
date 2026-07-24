@@ -97,7 +97,7 @@ public class ToOpLfResult {
         }
     }
 
-    public static ToOpLfResult readFromInputStream(InputStream is) throws IOException {
+    public static ToOpLfResult readFromInputStream(InputStream is) {
         Objects.requireNonNull(is);
         try {
             return new ToOpLfResult(JsonUtils.getObjectMapper().readValue(is, new TypeReference<>() { }));

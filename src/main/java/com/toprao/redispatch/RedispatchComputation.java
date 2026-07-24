@@ -40,7 +40,6 @@ import com.toprao.toop.data.ToOpN1Definition;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
-import java.nio.file.Path;
 import java.time.OffsetDateTime;
 import java.util.Comparator;
 import java.util.List;
@@ -53,16 +52,13 @@ public final class RedispatchComputation {
     private RedispatchComputation() {
     }
 
-    private static final String RAO_SUMMARY_FILE = "rao_summary.json";
-
     public static final int CPUS_COUNT = 1;
 
-    public static void compute(@NonNull Network network,
+    public static RaoSummary compute(@NonNull Network network,
                                @NonNull ToOpN1Definition n1Definition,
                                @NonNull RodaParameters forcedActions,
                                @NonNull RaoParameters raoParameters,
-                               @NonNull CracGenerationParameters cracGenerationParameters,
-                               Path resultsPath) {
+                               @NonNull CracGenerationParameters cracGenerationParameters) {
 
         // Run SA to generate ToOpLfResult
         String initialVariantId = network.getVariantManager().getWorkingVariantId();
@@ -78,44 +74,37 @@ public final class RedispatchComputation {
         network.getVariantManager().setWorkingVariant(initialVariantId);
         network.getVariantManager().removeVariant(saVariantId);
 
-        compute(network, n1Definition, toOpLfResult, forcedActions, raoParameters, cracGenerationParameters, resultsPath);
+        return compute(network, n1Definition, toOpLfResult, forcedActions, raoParameters, cracGenerationParameters);
     }
 
-    public static void compute(@NonNull Network network,
+    public static RaoSummary compute(@NonNull Network network,
                                @NonNull ToOpN1Definition n1Definition,
                                @NonNull ToOpLfResult lfResult,
                                @NonNull RodaParameters forcedActions,
                                @NonNull RaoParameters raoParameters,
-                               @NonNull CracGenerationParameters cracGenerationParameters,
-                               Path resultsPath) {
+                               @NonNull CracGenerationParameters cracGenerationParameters) {
 
         addRodaParameters(raoParameters, forcedActions);
-        if (resultsPath != null) {
-            if (resultsPath.toFile().mkdirs()) {
-                log.debug("Created results directory {}", resultsPath);
-            }
-            lfResult.write(resultsPath.resolve("toop_lf_result.json"));
-        }
 
         CracCreationSpecifier cracCreationSpecifier = new FullPreventiveRaoSpecifier(n1Definition, lfResult, cracGenerationParameters, null);
         RaoRunner raoRunner = new RaoRunner();
         TimeCoupledRaoResult raoResult = raoRunner.run(network, cracCreationSpecifier, raoParameters);
 
-        if (resultsPath != null) {
-            writeResultsSummary(resultsPath, raoResult, raoRunner.getTimeRaoInput());
-        }
+        return createRaoSummary(raoResult, raoRunner.getTimeRaoInput());
 
     }
 
-    private static void writeResultsSummary(Path outputPath, TimeCoupledRaoResult result, TimeCoupledRaoInput timeCoupledRaoInput) {
+    private static RaoSummary createRaoSummary(TimeCoupledRaoResult result, TimeCoupledRaoInput timeCoupledRaoInput) {
         OffsetDateTime dt = timeCoupledRaoInput.getTimestampsToRun().stream().toList().getFirst();
         Crac crac = timeCoupledRaoInput.getRaoInputs().getData(dt).get().getCrac();
 
         double totalCost = result.getFunctionalCost(crac.getLastInstant(), dt);
 
+        // TODO take actions from all states (ok like this for now, actions are only preventive)
         List<ActionSummary> actionSummaries = crac.getStates(crac.getInstant("preventive")).stream()
             .flatMap(state -> result.getActivatedRangeActionsDuringState(state)
             .stream().map(a -> toActionSummary(a, result, state)))
+            .sorted(Comparator.comparingDouble(ActionSummary::cost).reversed().thenComparing(ActionSummary::name))
             .toList();
 
         FastRaoResultImpl timestampResult = (FastRaoResultImpl) result.getIndividualRaoResult(dt);
@@ -132,9 +121,7 @@ public final class RedispatchComputation {
                 .toList();
 
         boolean isSecure = limitingElements.stream().noneMatch(e -> e.margin() <= 0);
-
-        RaoSummary raoSummary = new RaoSummary(isSecure, totalCost, actionSummaries, limitingElements);
-        raoSummary.write(outputPath.resolve(RAO_SUMMARY_FILE));
+        return new RaoSummary(isSecure, totalCost, actionSummaries, limitingElements);
     }
 
     private static CnecSummary toCnecSummary(FlowResult flowResult, FlowCnec cnec) {
