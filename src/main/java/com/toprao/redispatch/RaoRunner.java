@@ -16,6 +16,7 @@ import com.powsybl.iidm.network.extensions.HvdcAngleDroopActivePowerControl;
 import com.powsybl.openrao.commons.TemporalDataImpl;
 import com.powsybl.openrao.data.crac.api.Crac;
 import com.powsybl.openrao.data.crac.api.CracCreationContext;
+import com.powsybl.openrao.data.crac.api.parameters.CracCreationParameters;
 import com.powsybl.openrao.data.crac.io.network.NetworkCracCreator;
 import com.powsybl.openrao.data.raoresult.api.TimeCoupledRaoResult;
 import com.powsybl.openrao.data.timecoupledconstraints.TimeCoupledConstraints;
@@ -67,7 +68,8 @@ public class RaoRunner {
     }
 
     public static Crac generateCrac(CracCreationSpecifier cracCreationSpecifier, Network network) {
-        CracCreationContext ccc = NetworkCracCreator.createCrac(network, cracCreationSpecifier.getCracCreationParameters(network));
+        CracCreationParameters cracCreationParameters = cracCreationSpecifier.getCracCreationParameters(network);
+        CracCreationContext ccc = NetworkCracCreator.createCrac(network, cracCreationParameters);
         ccc.getCreationReport().printCreationReport();
         return ccc.getCrac();
     }

@@ -22,6 +22,7 @@ import com.toprao.redispatch.result.RaoSummary;
 import com.toprao.toop.data.ToOpLfResult;
 import com.toprao.toop.data.ToOpN1Definition;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.cli.help.HelpFormatter;
 
 import java.nio.file.Path;
 
@@ -43,7 +44,11 @@ public final class Main {
     }
 
     private static void runRedispatch(String[] args) {
-        RedispatchCliOptions opts = CommandLineHelper.parseCommandLineOptions(args);
+        RedispatchCliOptions opts = CommandLineHelper.parseCommandLineOptions(args, HelpFormatter.builder().get());
+
+        if (opts == null) {
+            return;
+        }
 
         Network network = InputFilesReader.readNetwork(opts.networkFilePath());
         ToOpN1Definition n1Definition = InputFilesReader.readN1Definition(opts.n1DefFilePath());

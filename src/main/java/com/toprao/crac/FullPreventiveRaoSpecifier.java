@@ -34,8 +34,8 @@ public class FullPreventiveRaoSpecifier extends AbstractCnecFilteringSpecifier {
     private static final String PREVENTIVE = "preventive";
     private static final String OUTAGE = "outage";
 
-    public FullPreventiveRaoSpecifier(ToOpN1Definition n1Definition, ToOpLfResult toOpLfResult, CracGenerationParameters cracGenerationParameters, Integer cocbLimit) {
-        super(n1Definition, toOpLfResult, cracGenerationParameters, cocbLimit);
+    public FullPreventiveRaoSpecifier(ToOpN1Definition n1Definition, ToOpLfResult toOpLfResult, CracGenerationParameters cracGenerationParameters) {
+        super(n1Definition, toOpLfResult, cracGenerationParameters);
     }
 
     @Override
@@ -52,7 +52,6 @@ public class FullPreventiveRaoSpecifier extends AbstractCnecFilteringSpecifier {
         cracCreationParameters.addExtension(NetworkCracCreationParameters.class, parameters);
 
         createCnecParameters(parameters);
-
         createRaParameters(parameters);
 
         log.info("Crac creation parameters created");

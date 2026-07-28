@@ -319,13 +319,10 @@
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
-            <artifactId>open-rao-roda</artifactId>
-            <version>${openrao.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.powsybl</groupId>
             <artifactId>powsybl-open-loadflow</artifactId>
             <scope>compile</scope>
+            <version>2.3.0</version>
+            <type>test-jar</type>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>

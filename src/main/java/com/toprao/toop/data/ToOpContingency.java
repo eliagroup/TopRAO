@@ -17,9 +17,9 @@ import java.util.List;
 
 @Getter
 public class ToOpContingency {
-    private final List<ToOpGridElement> elements;
     private final String id;
     private final String name;
+    private final List<ToOpGridElement> elements;
 
     @JsonCreator
     public ToOpContingency(@JsonProperty("id") String id,

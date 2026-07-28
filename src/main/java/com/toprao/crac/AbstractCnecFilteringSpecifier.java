@@ -19,7 +19,6 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,18 +30,21 @@ public abstract class AbstractCnecFilteringSpecifier implements CracCreationSpec
 
     private ToOpN1Definition n1Definition;
     private ToOpLfResult toOpLfResult;
-
     protected CracGenerationParameters cracGenerationParameters;
-    private Integer cocbLimit;
+
     private static final String BASE_CASE_ID = "BASECASE";
     private static final Double CRITICAL_ELEMENTS_OPTIMIZED_MIN_V = null;
 
     protected void createFilteredCnecParameters(NetworkCracCreationParameters parameters) {
+        // TODO add a warning if the branch does not have limits on both sides
+        List<String> monitoredBranchesIdsBaseCase = n1Definition.getMonitoredElements().stream().map(e -> e.getId()).toList();
+
+        // TODO check that each cnec of n1 definition has a loadflow result associated
         Map<String, List<ToOpCnecResult>> selectedResultsByContingency = selectCnecs();
         List<String> selectedContingencyElementIds = selectedResultsByContingency.keySet().stream().flatMap(c -> n1Definition.getContingency(c).getElements().stream()).map(e -> e.getId()).toList();
-        parameters.getContingencies().setBranchFilter(b -> selectedContingencyElementIds.contains(b.getId()));
 
         log.info("Contingency elements count : {}", selectedContingencyElementIds.size());
+        parameters.getContingencies().setBranchFilter(b -> selectedContingencyElementIds.contains(b.getId()));
 
         parameters.getCriticalElements().setCountryFilter(CracGenerationParameters.ALL_COUNTRIES_SET);
         parameters.getCriticalElements().setOptimizedMinMaxV(CRITICAL_ELEMENTS_OPTIMIZED_MIN_V, null);
@@ -57,12 +59,9 @@ public abstract class AbstractCnecFilteringSpecifier implements CracCreationSpec
             );
         });
 
-        List<String> monitoredBranchesIdsBaseCase = n1Definition.getMonitoredElements().stream().map(e -> e.getId()).toList();
-
         log.info("CBCO count : {}", cbco.entrySet().stream().flatMap(e -> e.getValue().stream()).toList().size());
         parameters.getCriticalElements().setOptimizedMonitoredProvider((branch, contingency, context) -> {
             boolean optimized;
-
             if (contingency != null) {
                 optimized = cbco.containsKey(branch.getId())
                         && contingency.getElements().stream().map(ContingencyElement::getId).anyMatch(id -> cbco.get(branch.getId()).contains(id));
@@ -74,26 +73,6 @@ public abstract class AbstractCnecFilteringSpecifier implements CracCreationSpec
     }
 
     private Map<String, List<ToOpCnecResult>> selectCnecs() {
-        if (cocbLimit != null) {
-            return selectMostCriticalCnecs();
-        }
-        return selectCnecsByFlowDifWithBaseCase();
-    }
-
-    private Map<String, List<ToOpCnecResult>> selectMostCriticalCnecs() {
-        List<String> n1DefContingencyIds = n1Definition.getContingencies().stream().map(c -> c.getId()).toList();
-        List<String> n1DefContingencyElementsIds = n1Definition.getContingencies().stream().flatMap(c -> c.getElements().stream().map(e -> e.getId())).toList();
-
-        return toOpLfResult.getResults()
-                .stream()
-                .filter(r -> n1DefContingencyElementsIds.contains(r.element()))
-                .filter(r -> n1DefContingencyIds.contains(r.contingency()))
-                .sorted(Comparator.comparingDouble(r -> -r.loading()))
-                .limit(this.cocbLimit)
-                .collect(Collectors.groupingBy(r -> r.contingency()));
-    }
-
-    private Map<String, List<ToOpCnecResult>> selectCnecsByFlowDifWithBaseCase() {
         List<String> n1DefContingencyIds = n1Definition.getContingencies().stream().map(c -> c.getId()).toList();
         List<String> monitoredElements = n1Definition.getMonitoredElements().stream().map(e -> e.getId()).toList();
 

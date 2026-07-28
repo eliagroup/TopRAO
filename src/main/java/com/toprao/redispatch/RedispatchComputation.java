@@ -86,7 +86,7 @@ public final class RedispatchComputation {
 
         addRodaParameters(raoParameters, forcedActions);
 
-        CracCreationSpecifier cracCreationSpecifier = new FullPreventiveRaoSpecifier(n1Definition, lfResult, cracGenerationParameters, null);
+        CracCreationSpecifier cracCreationSpecifier = new FullPreventiveRaoSpecifier(n1Definition, lfResult, cracGenerationParameters);
         RaoRunner raoRunner = new RaoRunner();
         TimeCoupledRaoResult raoResult = raoRunner.run(network, cracCreationSpecifier, raoParameters);
 
