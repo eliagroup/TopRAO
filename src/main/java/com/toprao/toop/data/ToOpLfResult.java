@@ -9,7 +9,8 @@
 
 package com.toprao.toop.data;
 
-import lombok.Getter;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.toprao.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -23,42 +24,15 @@ import java.util.Set;
 @Slf4j
 public class ToOpLfResult {
 
-    @Getter
-    public static class CnecKey {
-
-        private final String element;
-        private final String contingency;
-
-        public CnecKey(String element, String contingency) {
-            this.element = element;
-            this.contingency = contingency;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (o instanceof CnecKey key) {
-                return getElement().equals(key.getElement()) && getContingency().equals(key.getContingency());
-            }
-            return false;
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(getElement(), getContingency());
-        }
-    }
+    public record CnecKey(String element, String contingency, int side) { }
 
     private final Map<CnecKey, ToOpCnecResult> index = new HashMap<>();
-
     private final Map<String, List<ToOpCnecResult>> indexByContingencyId = new HashMap<>();
     private final Map<String, List<ToOpCnecResult>> indexByElementId = new HashMap<>();
 
     private void indexResults(List<ToOpCnecResult> results) {
         results.forEach(r -> {
-            CnecKey cnecKey = new CnecKey(r.element(), r.contingency());
+            CnecKey cnecKey = new CnecKey(r.element(), r.contingency(), r.side());
             if (index.containsKey(cnecKey)) {
                 ToOpCnecResult alreadyPresent = index.get(cnecKey);
                 if (alreadyPresent.loading() < r.loading()) {
@@ -74,16 +48,29 @@ public class ToOpLfResult {
                 res -> indexByElementId.computeIfAbsent(res.element(), k -> new ArrayList<>()).add(res));
     }
 
-    private void checkAndFixCnecResults() {
-        List<ToOpCnecResult> results = getResults();
+    public void validateCnecResults(ToOpN1Definition n1Definition) {
+        filterCnecsNotInN1Def(n1Definition);
+        fixNanValues();
+    }
+
+    private void filterCnecsNotInN1Def(ToOpN1Definition n1Definition) {
+        List<String> contingencyIds = n1Definition.getContingencies().stream().map(c -> c.getId()).toList();
+        List<String> elementIds = n1Definition.getMonitoredElements().stream().map(e -> e.getId()).toList();
+
+        getResults().stream()
+                .filter(res -> !contingencyIds.contains(res.contingency()) || !elementIds.contains(res.element()))
+                .forEach(res -> removeResult(res));
+    }
+
+    private void fixNanValues() {
         Set<ToOpCnecResult> fixedResults = new HashSet<>();
-        for (ToOpCnecResult result : results) {
+        for (ToOpCnecResult result : getResults()) {
             double loading = result.loading();
             double p = result.p();
 
             if (Double.isNaN(loading) && Double.isNaN(p)) {
-                throw new IllegalStateException("LF result for element %s at contingency %s has null P and loading"
-                        .formatted(result.element(), result.contingency()));
+                log.error("LF result for element {} at contingency {} has null P and loading. Will be ignored.",
+                        result.element(), result.contingency());
             } else if (Double.isNaN(loading)) {
                 ToOpCnecResult completeRes = getCompleteRes(result);
                 loading = p * completeRes.loading() / completeRes.p();
@@ -109,13 +96,13 @@ public class ToOpLfResult {
                 .filter(res -> res.p() != 0 && res.loading() != 0)
                 .findFirst()
                 .orElseThrow(() ->
-                        new IllegalStateException("Element /s has null loading and p for all cases"
+                        new IllegalStateException("Element %s has null loading and p for all cases"
                                 .formatted(result.element())));
     }
 
     private void replaceResult(ToOpCnecResult result) {
-        ToOpCnecResult oldResult = getLfResult(result.element(), result.contingency());
-        index.put(new CnecKey(result.element(), result.contingency()), result);
+        ToOpCnecResult oldResult = getLfResult(result.element(), result.contingency(), result.side());
+        index.put(new CnecKey(result.element(), result.contingency(), result.side()), result);
 
         indexByElementId.get(result.element()).remove(oldResult);
         indexByContingencyId.get(result.contingency()).remove(oldResult);
@@ -124,13 +111,18 @@ public class ToOpLfResult {
         indexByElementId.computeIfAbsent(result.element(), k -> new ArrayList<>()).add(result);
     }
 
-    public ToOpLfResult(List<ToOpCnecResult> results) {
-        indexResults(List.copyOf(results));
-        checkAndFixCnecResults();
+    private void removeResult(ToOpCnecResult result) {
+        index.remove(new CnecKey(result.element(), result.contingency(), result.side()));
+        indexByElementId.get(result.element()).remove(result);
+        indexByContingencyId.get(result.contingency()).remove(result);
     }
 
-    public ToOpCnecResult getLfResult(String elementId, String contingencyId) {
-        return index.getOrDefault(new CnecKey(elementId, contingencyId), null);
+    public ToOpLfResult(List<ToOpCnecResult> results) {
+        indexResults(List.copyOf(results));
+    }
+
+    public ToOpCnecResult getLfResult(String elementId, String contingencyId, int side) {
+        return index.getOrDefault(new CnecKey(elementId, contingencyId, side), null);
     }
 
     public List<ToOpCnecResult> getLfResultsForContingency(String contingencyId) {

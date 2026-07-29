@@ -144,7 +144,7 @@ public class SaRunnerTest {
     }
 
     void assertLfResult(ToOpLfResult lfResult, String contingencyId, String gridElementId, int side, double p, double loading) {
-        ToOpCnecResult cnecResult = lfResult.getLfResult(gridElementId, contingencyId);
+        ToOpCnecResult cnecResult = lfResult.getLfResult(gridElementId, contingencyId, side);
         if (cnecResult == null) {
             throw new IllegalStateException(MessageFormat.format("No result found for element {0} and contingency {1}", gridElementId, contingencyId));
         }

@@ -170,10 +170,10 @@ public class InputsReaderTest {
         assertThat(lfResult.getResults()).hasSize(6);
         assertCnecResult(lfResult.getResults().get(0), "BASECASE", "L1", 2, Double.NaN, -9.68);
         assertCnecResult(lfResult.getResults().get(1), "BASECASE", "L2", 1, 0.282, 9.68);
-        assertCnecResult(lfResult.getResults().get(2), "L1", "L2", 2, Double.NaN, -15.793);
-        assertCnecResult(lfResult.getResults().get(3), "BASECASE", "L2", 2, Double.NaN, -9.68);
+        assertCnecResult(lfResult.getResults().get(2), "BASECASE", "L2", 2, Double.NaN, -9.68);
+        assertCnecResult(lfResult.getResults().get(3), "BASECASE", "L1", 1, 0.282, 9.68);
         assertCnecResult(lfResult.getResults().get(4), "L1", "L2", 1, 0.4596, 15.793);
-        assertCnecResult(lfResult.getResults().get(5), "BASECASE", "L1", 1, 0.282, 9.68);
+        assertCnecResult(lfResult.getResults().get(5), "L1", "L2", 2, Double.NaN, -15.793);
     }
 
     @Test
