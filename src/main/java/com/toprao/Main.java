@@ -45,11 +45,13 @@ public final class Main {
 
     private static void runRedispatch(String[] args) {
         RedispatchCliOptions opts = CommandLineHelper.parseCommandLineOptions(args, HelpFormatter.builder().get());
-
         if (opts == null) {
             return;
         }
+        runRedispatch(opts);
+    }
 
+    private static void runRedispatch(RedispatchCliOptions opts) {
         Network network = InputFilesReader.readNetwork(opts.networkFilePath());
         ToOpN1Definition n1Definition = InputFilesReader.readN1Definition(opts.n1DefFilePath());
 
