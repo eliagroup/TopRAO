@@ -79,7 +79,6 @@ public abstract class AbstractCnecFilteringSpecifier implements CracCreationSpec
 
         Map<String, List<ToOpCnecResult>> baseCaseResults = toOpLfResult.getLfResultsForContingency(BASE_CASE_ID)
                 .stream()
-                // keep the result of the side with the highest loading
                 .collect(Collectors.groupingBy(r -> r.element()));
 
         List<ToOpCnecResult> resultsOk = toOpLfResult.getResults()
