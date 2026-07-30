@@ -46,7 +46,7 @@ public final class CommandLineHelper {
             cmd = parser.parse(options, args);
         } catch (ParseException e) {
             printHelp(formatter, options);
-            return null;
+            throw new IllegalArgumentException("Input arguments incorrect, check help message");
         }
 
         if (cmd.hasOption(HELP_OPT)) {
@@ -86,8 +86,7 @@ public final class CommandLineHelper {
 
     private static void checkRequiredOption(String input, String optName) {
         if (input == null) {
-            System.err.printf("You must define --%s. Use --help for extra information.%n", optName);
-            System.exit(1);
+            throw new IllegalArgumentException("Argument %s is not defined. Chexk --help for more information".formatted(optName));
         }
     }
 

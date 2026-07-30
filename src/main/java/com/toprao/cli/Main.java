@@ -7,14 +7,12 @@
  * Mozilla Public License, version 2.0
  */
 
-package com.toprao;
+package com.toprao.cli;
 
 import com.powsybl.iidm.network.Network;
 import com.powsybl.openrao.raoapi.parameters.RaoParameters;
 import com.powsybl.openrao.roda.parameters.RodaParameters;
-import com.toprao.cli.CommandLineHelper;
-import com.toprao.cli.InputFilesReader;
-import com.toprao.cli.RedispatchCliOptions;
+import com.toprao.JsonUtils;
 import com.toprao.crac.CracGenerationParameters;
 import com.toprao.redispatch.RaoParametersFactory;
 import com.toprao.redispatch.RedispatchComputation;
@@ -38,20 +36,16 @@ public final class Main {
             runRedispatch(args);
         } catch (Exception e) {
             System.err.println(e.getMessage());
-            e.printStackTrace();
             System.exit(1);
         }
     }
 
-    private static void runRedispatch(String[] args) {
+    static void runRedispatch(String[] args) {
         RedispatchCliOptions opts = CommandLineHelper.parseCommandLineOptions(args, HelpFormatter.builder().get());
-        if (opts == null) {
-            return;
-        }
         runRedispatch(opts);
     }
 
-    private static void runRedispatch(RedispatchCliOptions opts) {
+    static void runRedispatch(RedispatchCliOptions opts) {
         Network network = InputFilesReader.readNetwork(opts.networkFilePath());
         ToOpN1Definition n1Definition = InputFilesReader.readN1Definition(opts.n1DefFilePath());
 
@@ -82,7 +76,7 @@ public final class Main {
         } else {
             raoSummary = RedispatchComputation.compute(network, n1Definition, forcedActions, raoParameters, cracGenerationParameters);
         }
-        raoSummary.write(resultsPath.resolve(RAO_SUMMARY_FILE));
+        JsonUtils.write(resultsPath.resolve(RAO_SUMMARY_FILE), raoSummary);
     }
 
 }

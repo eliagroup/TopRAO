@@ -15,6 +15,7 @@ import com.powsybl.contingency.ContingencyContext;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.security.SecurityAnalysisResult;
 import com.powsybl.security.monitor.StateMonitor;
+import com.toprao.JsonUtils;
 import com.toprao.sa.SaResultsConverter;
 import com.toprao.sa.SecurityAnalysisRunner;
 import com.toprao.toop.data.ToOpCnecResult;
@@ -26,7 +27,6 @@ import com.toprao.utils.TestAssertUtils;
 import org.assertj.core.data.Offset;
 import org.junit.jupiter.api.Test;
 
-import java.nio.file.Path;
 import java.text.MessageFormat;
 import java.util.List;
 import java.util.Set;
@@ -37,7 +37,7 @@ public class SaRunnerTest {
     @Test
     void sa2nodesLfResult() {
         Network network = NetworkImportsUtil.import2NodesNetwork();
-        ToOpN1Definition n1Definition = ToOpN1Definition.readFromInputStream(SaRunnerTest.class.getResourceAsStream("/redispatch/2nodes/n1_definition_2nodes.json"));
+        ToOpN1Definition n1Definition = JsonUtils.read(getClass().getResourceAsStream("/redispatch/2nodes/n1_definition_2nodes.json"), ToOpN1Definition.class);
 
         SecurityAnalysisResult saResult = new SecurityAnalysisRunner().run(network, n1Definition);
         ToOpLfResult lfResult = new SaResultsConverter().convertResults(saResult, network);
@@ -60,8 +60,6 @@ public class SaRunnerTest {
 
         SecurityAnalysisResult saResult = new SecurityAnalysisRunner().run(network, contingencies, stateMonitors, SecurityAnalysisRunner.createLfParameters(), 1);
         ToOpLfResult lfResult = new SaResultsConverter().convertResults(saResult, network);
-
-        lfResult.write(Path.of("branch_results.json"));
 
         assertThat(lfResult.getResults()).hasSize(4);
         assertLfResult(lfResult, "BASECASE", "FRANCE_BELGIUM_1", 1, -266.6666, 0.5333518541025759);
@@ -110,6 +108,23 @@ public class SaRunnerTest {
         assertThat(convertedN1Def.getContingencies().get(2).getId()).isEqualTo("CO_FRANCE_BELGIUM_2");
         assertThat(convertedN1Def.getContingencies().get(2).getElements()).hasSize(1);
         TestAssertUtils.assertGridElementsIdentical(convertedN1Def.getContingencies().get(2).getElements().get(0), convertedGridElement1);
+    }
+
+    @Test
+    void sa2nodesLfResultSides2() {
+        Network network = NetworkImportsUtil.import2NodesNetwork();
+        network.getLineStream().forEach(l -> l.getOrCreateSelectedOperationalLimitsGroup1().removeCurrentLimits());
+
+        ToOpN1Definition n1Definition = JsonUtils.read(getClass().getResourceAsStream("/redispatch/2nodes/n1_definition_2nodes.json"), ToOpN1Definition.class);
+
+        SecurityAnalysisResult saResult = new SecurityAnalysisRunner().run(network, n1Definition);
+        ToOpLfResult lfResult = new SaResultsConverter().convertResults(saResult, network);
+
+        assertThat(lfResult.getResults()).hasSize(4);
+        assertLfResult(lfResult, "BASECASE", "FRANCE_BELGIUM_1", 2, 266.6666, 0.5333518541025759);
+        assertLfResult(lfResult, "BASECASE", "FRANCE_BELGIUM_2", 2, 533.333333, 1.0677);
+        assertLfResult(lfResult, "CO_FRANCE_BELGIUM_1", "FRANCE_BELGIUM_2", 2, 800, 1.601);
+        assertLfResult(lfResult, "CO_FRANCE_BELGIUM_2", "FRANCE_BELGIUM_1", 2, 800, 1.597);
     }
 
     void assertLfResult(ToOpLfResult lfResult, String contingencyId, String gridElementId, int side, double p, double loading) {

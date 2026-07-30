@@ -6,6 +6,7 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.openrao.data.crac.api.Crac;
 import com.powsybl.openrao.data.crac.api.cnec.Cnec;
 import com.powsybl.openrao.data.crac.api.rangeaction.InjectionRangeAction;
+import com.powsybl.openrao.data.crac.api.rangeaction.PstRangeAction;
 import com.powsybl.openrao.data.crac.api.rangeaction.RangeAction;
 import com.powsybl.openrao.data.crac.api.rangeaction.VariationDirection;
 import com.toprao.crac.CracGenerationParameters;
@@ -15,7 +16,6 @@ import com.toprao.toop.data.ToOpContingency;
 import com.toprao.toop.data.ToOpGridElement;
 import com.toprao.toop.data.ToOpLfResult;
 import com.toprao.toop.data.ToOpN1Definition;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -27,35 +27,54 @@ public class CracGenerationTest {
 
     private Network network;
 
-    ToOpGridElement l14;
-    ToOpContingency coL12;
-    ToOpContingency coL13;
+    ToOpGridElement branch1;
+    ToOpContingency contingency1;
+    ToOpContingency contingency2;
     private ToOpN1Definition n1Definition;
     private ToOpLfResult lfResult;
     private CracGenerationParameters parameters = new CracGenerationParameters();
 
-    @BeforeEach
-    void setup() {
-        network = FourBusRaoNetworkFactory.createBaseNetwork();
+    private void initFourBus() {
+        network = TestNetworkFactory.createFourBusNetwork();
 
-        l14 = toGridElement(network.getLine("l14"));
-        coL12 = toContingency(network.getLine("l12"));
-        coL13 = toContingency(network.getLine("l13"));
+        branch1 = toGridElement(network.getLine("l14"));
+        contingency1 = toContingency(network.getLine("l12"));
+        contingency2 = toContingency(network.getLine("l13"));
 
-        List<ToOpGridElement> monitoredElements = List.of(l14);
-        List<ToOpContingency> contingencies = List.of(coL12, coL13);
+        List<ToOpGridElement> monitoredElements = List.of(branch1);
+        List<ToOpContingency> contingencies = List.of(contingency1, contingency2);
 
         n1Definition = new ToOpN1Definition(monitoredElements, contingencies, null);
 
-        List<ToOpCnecResult> cnecResults = List.of(baseCaseResult(l14, 0.8, 40),
-                contingencyResult(l14, coL12, 0.92, 46),
-                contingencyResult(l14, coL13, 0.98, 49));
+        List<ToOpCnecResult> cnecResults = List.of(baseCaseResult(branch1, 0.8, 40),
+                contingencyResult(branch1, contingency1, 0.92, 46),
+                contingencyResult(branch1, contingency2, 0.98, 49));
 
         lfResult = new ToOpLfResult(cnecResults);
     }
 
+    private void initPst() {
+        network = TestNetworkFactory.createWithPst();
+
+        branch1 = toGridElement(network.getLine("L2"));
+        contingency1 = toContingency(network.getLine("L1"));
+
+        List<ToOpGridElement> monitoredElements = List.of(branch1);
+        List<ToOpContingency> contingencies = List.of(contingency1);
+
+        n1Definition = new ToOpN1Definition(monitoredElements, contingencies, null);
+
+        List<ToOpCnecResult> cnecResults = List.of(baseCaseResult(branch1, 0.8, 40),
+                contingencyResult(branch1, contingency1, 0.92, 46));
+
+        lfResult = new ToOpLfResult(cnecResults);
+
+        parameters.setRedispatchActions(false);
+    }
+
     @Test
     void defaultParameters() {
+        initFourBus();
         FullPreventiveRaoSpecifier raoSpecifier = new FullPreventiveRaoSpecifier(n1Definition, lfResult, parameters);
         Crac crac = RaoRunner.generateCrac(raoSpecifier, network);
 
@@ -68,20 +87,21 @@ public class CracGenerationTest {
         assertThat(crac.getCnecs()).containsExactlyInAnyOrder(outageCnec1, outageCnec2, basCaseCnec);
 
         assertThat(basCaseCnec.getNetworkElements()).hasSize(1);
-        assertThat(basCaseCnec.getNetworkElements().stream().findFirst().get().getId()).isEqualTo(l14.getId());
+        assertThat(basCaseCnec.getNetworkElements().stream().findFirst().get().getId()).isEqualTo(branch1.getId());
         assertThat(basCaseCnec.getState().getContingency()).isEmpty();
 
         assertThat(outageCnec1.getNetworkElements()).hasSize(1);
-        assertThat(outageCnec1.getNetworkElements().stream().findFirst().get().getId()).isEqualTo(l14.getId());
-        assertThat(outageCnec1.getState().getContingency().get().getId()).isEqualTo(coL12.getId());
+        assertThat(outageCnec1.getNetworkElements().stream().findFirst().get().getId()).isEqualTo(branch1.getId());
+        assertThat(outageCnec1.getState().getContingency().get().getId()).isEqualTo(contingency1.getId());
 
         assertThat(outageCnec2.getNetworkElements()).hasSize(1);
-        assertThat(outageCnec2.getNetworkElements().stream().findFirst().get().getId()).isEqualTo(l14.getId());
-        assertThat(outageCnec2.getState().getContingency().get().getId()).isEqualTo(coL13.getId());
+        assertThat(outageCnec2.getNetworkElements().stream().findFirst().get().getId()).isEqualTo(branch1.getId());
+        assertThat(outageCnec2.getState().getContingency().get().getId()).isEqualTo(contingency2.getId());
     }
 
     @Test
     void allContingencyCnecsFiltered() {
+        initFourBus();
         parameters.setAffectedCnecMinActivePowerDiff(10);
         parameters.setAffectedCnecMinLoadingDiff(0.3);
 
@@ -93,6 +113,7 @@ public class CracGenerationTest {
 
     @Test
     void cnecFilteredByLoading() {
+        initFourBus();
         parameters.setAffectedCnecMinActivePowerDiff(0);
         parameters.setAffectedCnecMinLoadingDiff(0.13);
 
@@ -107,6 +128,7 @@ public class CracGenerationTest {
 
     @Test
     void cnecFilteredByActivePower() {
+        initFourBus();
         parameters.setAffectedCnecMinActivePowerDiff(7);
         parameters.setAffectedCnecMinLoadingDiff(0);
 
@@ -121,6 +143,7 @@ public class CracGenerationTest {
 
     @Test
     void monitoredBranchIgnoredWhenNoLimits() {
+        initFourBus();
         network.getLine("l14").getOrCreateSelectedOperationalLimitsGroup1().removeActivePowerLimits();
         network.getLine("l14").getOrCreateSelectedOperationalLimitsGroup2().removeActivePowerLimits();
         FullPreventiveRaoSpecifier raoSpecifier = new FullPreventiveRaoSpecifier(n1Definition, lfResult, parameters);
@@ -130,6 +153,7 @@ public class CracGenerationTest {
 
     @Test
     void monitoredBranchOneSideLimitAccepted() {
+        initFourBus();
         network.getLine("l14").getOrCreateSelectedOperationalLimitsGroup1().removeActivePowerLimits();
         FullPreventiveRaoSpecifier raoSpecifier = new FullPreventiveRaoSpecifier(n1Definition, lfResult, parameters);
         Crac crac = RaoRunner.generateCrac(raoSpecifier, network);
@@ -138,6 +162,7 @@ public class CracGenerationTest {
 
     @Test
     void monitoredBranchCurrentLimitsAccepted() {
+        initFourBus();
         network.getLine("l14").getOrCreateSelectedOperationalLimitsGroup1().removeActivePowerLimits();
         network.getLine("l14").getOrCreateSelectedOperationalLimitsGroup1().newCurrentLimits().setPermanentLimit(2).add();
 
@@ -148,6 +173,7 @@ public class CracGenerationTest {
 
     @Test
     void generatorRemedialActions() {
+        initFourBus();
         FullPreventiveRaoSpecifier raoSpecifier = new FullPreventiveRaoSpecifier(n1Definition, lfResult, parameters);
         Crac crac = RaoRunner.generateCrac(raoSpecifier, network);
 
@@ -168,17 +194,16 @@ public class CracGenerationTest {
 
     @Test
     void generatorRemedialActionsDeactivated() {
+        initFourBus();
         parameters.setRedispatchActions(false);
-
         FullPreventiveRaoSpecifier raoSpecifier = new FullPreventiveRaoSpecifier(n1Definition, lfResult, parameters);
         Crac crac = RaoRunner.generateCrac(raoSpecifier, network);
-
         assertThat(crac.getRangeActions()).isEmpty();
-
     }
 
     @Test
     void generatorRemedialActionsSetPointsFixed() {
+        initFourBus();
         FullPreventiveRaoSpecifier raoSpecifier = new FullPreventiveRaoSpecifier(n1Definition, lfResult, parameters);
         Crac crac = RaoRunner.generateCrac(raoSpecifier, network);
 
@@ -198,6 +223,7 @@ public class CracGenerationTest {
 
     @Test
     void generatorRemedialActionsDefaultCosts() {
+        initFourBus();
         FullPreventiveRaoSpecifier raoSpecifier = new FullPreventiveRaoSpecifier(n1Definition, lfResult, parameters);
         Crac crac = RaoRunner.generateCrac(raoSpecifier, network);
 
@@ -210,6 +236,7 @@ public class CracGenerationTest {
 
     @Test
     void generatorRemedialActionsCosts() {
+        initFourBus();
         parameters.setRedispatchCostUp(2);
         parameters.setRedispatchCostDown(3);
         parameters.setRedispatchActivationCost(33);
@@ -226,6 +253,7 @@ public class CracGenerationTest {
 
     @Test
     void generatorRemedialActionsRequestedMaxP() {
+        initFourBus();
         parameters.setRedispatchGeneratorRequiredMaxP(65);
         FullPreventiveRaoSpecifier raoSpecifier = new FullPreventiveRaoSpecifier(n1Definition, lfResult, parameters);
         Crac crac = RaoRunner.generateCrac(raoSpecifier, network);
@@ -244,6 +272,7 @@ public class CracGenerationTest {
 
     @Test
     void generatorRemedialActionsCountries() {
+        initFourBus();
         // TODO add same test for psts
         parameters.setRangeActionsCountries(Set.of(Country.FR));
         FullPreventiveRaoSpecifier raoSpecifier = new FullPreventiveRaoSpecifier(n1Definition, lfResult, parameters);
@@ -255,6 +284,40 @@ public class CracGenerationTest {
         crac = RaoRunner.generateCrac(raoSpecifier, network);
         assertThat(crac.getRangeActions()).isEmpty();
     }
+
+    @Test
+    void pstRemedialActions() {
+        initPst();
+        parameters.setRedispatchActions(false);
+        FullPreventiveRaoSpecifier raoSpecifier = new FullPreventiveRaoSpecifier(n1Definition, lfResult, parameters);
+        Crac crac = RaoRunner.generateCrac(raoSpecifier, network);
+
+        PstRangeAction actionPst1 = crac.getPstRangeAction("PST_RA_PS1_preventive");
+        assertThat(crac.getRangeActions()).containsExactlyInAnyOrder(actionPst1);
+
+        assertThat(actionPst1.getNetworkElements()).hasSize(1);
+        assertThat(actionPst1.getNetworkElements().stream().findFirst().get().getId()).isEqualTo("PS1");
+
+        assertThat(actionPst1.getMaxAdmissibleSetpoint(-4.5)).isEqualTo(5);
+        assertThat(actionPst1.getMaxAdmissibleSetpoint(0)).isEqualTo(5);
+        assertThat(actionPst1.getMaxAdmissibleSetpoint(3)).isEqualTo(5);
+
+        assertThat(actionPst1.getMinAdmissibleSetpoint(-4.5)).isEqualTo(-5);
+        assertThat(actionPst1.getMinAdmissibleSetpoint(0)).isEqualTo(-5);
+        assertThat(actionPst1.getMinAdmissibleSetpoint(3)).isEqualTo(-5);
+    }
+
+    @Test
+    void pstRemedialActionsDisabled() {
+        initPst();
+        parameters.setPstActions(false);
+        FullPreventiveRaoSpecifier raoSpecifier = new FullPreventiveRaoSpecifier(n1Definition, lfResult, parameters);
+        Crac crac = RaoRunner.generateCrac(raoSpecifier, network);
+        assertThat(crac.getRangeActions()).isEmpty();
+    }
+
+    // todo test pst actions countries filter
+    // todo test pst as monitored element + contingency + one of those and RA
 
     ToOpGridElement toGridElement(Branch<?> branch) {
         return new ToOpGridElement(branch.getId(), branch.getNameOrId(), "branch", branch.getType().name());

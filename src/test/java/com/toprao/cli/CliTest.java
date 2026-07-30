@@ -1,17 +1,78 @@
 package com.toprao.cli;
 
+import com.toprao.JsonUtils;
+import com.toprao.redispatch.result.RaoSummary;
 import org.apache.commons.cli.help.HelpAppendable;
 import org.apache.commons.cli.help.HelpFormatter;
 import org.apache.commons.cli.help.TextHelpAppendable;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
-import java.io.IOException;
+import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class CliTest {
+
     @Test
-    public void testHelpMessage() throws IOException {
+    void runRedispatchWithAllDefaults(@TempDir Path tempPath) {
+        String gridPath = getClass().getResource("/redispatch/2nodes/TestCase2Nodes.xiidm").getPath();
+        String n1DefinitionPath = getClass().getResource("/redispatch/2nodes/n1_definition_2nodes.json").getPath();
+
+        String[] args = {"-g", gridPath, "-n", n1DefinitionPath, "-o", tempPath.toAbsolutePath().toString()};
+        Main.runRedispatch(args);
+
+        RaoSummary raoSummary = JsonUtils.read(tempPath.resolve("rao_summary.json"), RaoSummary.class);
+
+        assertThat(raoSummary.isSecure()).isTrue();
+        assertThat(raoSummary.getFunctionalCost()).isEqualTo(820);
+        assertThat(raoSummary.getActions()).hasSize(2);
+        assertThat(raoSummary.getLimitingElements()).hasSize(4);
+    }
+
+    @Test
+    void runRedispatchWithAllOptionalArgs(@TempDir Path tempPath) {
+        String gridPath = getClass().getResource("/redispatch/2nodes/TestCase2Nodes.xiidm").getPath();
+        String n1DefinitionPath = getClass().getResource("/redispatch/2nodes/n1_definition_2nodes.json").getPath();
+        String lfResulstPath = getClass().getResource("/redispatch/2nodes/branch_results.json").getPath();
+        String raoParametersPath = getClass().getResource("/redispatch/2nodes/RaoParameters.json").getPath();
+        String cracGenerationParametersPath = getClass().getResource("/redispatch/2nodes/crac_parameters.json").getPath();
+
+        String s = """
+                {
+                    "forced-actions": {
+                        "preventive-actions-list": {
+                            "version" : "1.3",
+                            "actions" : [ {
+                                "type" : "TERMINALS_CONNECTION",
+                                "id" : "open_FRANCE_BELGIUM_1",
+                                "elementId" : "FRANCE_BELGIUM_1",
+                                "open" : true
+                            }]
+                        }
+                    }
+                }
+                """;
+
+        String[] args = {"-g", gridPath,
+            "-n", n1DefinitionPath,
+            "-l", lfResulstPath,
+            "-t", s,
+            "-r", raoParametersPath,
+            "-c", cracGenerationParametersPath,
+            "-o", tempPath.toAbsolutePath().toString()};
+        Main.runRedispatch(args);
+
+        RaoSummary raoSummary = JsonUtils.read(tempPath.resolve("rao_summary.json"), RaoSummary.class);
+
+        assertThat(raoSummary.isSecure()).isTrue();
+        assertThat(raoSummary.getFunctionalCost()).isEqualTo(1440); // costs up and down are set to 2
+        assertThat(raoSummary.getActions()).hasSize(2);
+        assertThat(raoSummary.getLimitingElements()).hasSize(4);
+    }
+
+    @Test
+    void testHelpMessage() {
         StringBuilder output = new StringBuilder();
         HelpAppendable helpAppendable = new TextHelpAppendable(output);
 

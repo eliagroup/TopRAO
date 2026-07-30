@@ -9,7 +9,6 @@
 
 package com.toprao.crac;
 
-import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.Generator;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
@@ -65,7 +64,7 @@ public class FullPreventiveRaoSpecifier extends AbstractCnecFilteringSpecifier {
     }
 
     protected void createRaParameters(NetworkCracCreationParameters parameters) {
-        parameters.getCountertradingRangeActions().setCountryFilter(Set.of(Country.AM));
+        parameters.getCountertradingRangeActions().setCountryFilter(Set.of());
 
         if (cracGenerationParameters.isPstActions()) {
             parameters.getPstRangeActions().setCountryFilter(cracGenerationParameters.getRangeActionsCountries());
@@ -78,7 +77,7 @@ public class FullPreventiveRaoSpecifier extends AbstractCnecFilteringSpecifier {
                                     RangeType.RELATIVE_TO_INITIAL_NETWORK))
             );
         } else {
-            parameters.getPstRangeActions().setCountryFilter(Set.of(Country.AM));
+            parameters.getPstRangeActions().setCountryFilter(Set.of());
         }
 
         if (cracGenerationParameters.isRedispatchActions()) {
@@ -94,7 +93,7 @@ public class FullPreventiveRaoSpecifier extends AbstractCnecFilteringSpecifier {
                     new RangeActionCosts(cracGenerationParameters.getRedispatchActivationCost(), cracGenerationParameters.getRedispatchCostUp(), cracGenerationParameters.getRedispatchCostDown()));
         } else {
             parameters.getRedispatchingRangeActions().setIncludeAllInjections(false);
-            parameters.getRedispatchingRangeActions().setCountryFilter(Set.of(Country.AM));
+            parameters.getRedispatchingRangeActions().setCountryFilter(Set.of());
         }
     }
 }

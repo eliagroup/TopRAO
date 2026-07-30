@@ -19,6 +19,7 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.openrao.raoapi.json.JsonRaoParameters;
 import com.powsybl.openrao.raoapi.parameters.RaoParameters;
 import com.powsybl.openrao.roda.parameters.RodaParameters;
+import com.toprao.JsonUtils;
 import com.toprao.crac.CracGenerationParameters;
 import com.toprao.toop.data.ToOpLfResult;
 import com.toprao.toop.data.ToOpLfResultParquetReader;
@@ -43,7 +44,7 @@ public final class InputFilesReader {
 
     public static ToOpN1Definition readN1Definition(@NonNull String n1DefinitionPath) {
         Path path = Path.of(n1DefinitionPath);
-        return ToOpN1Definition.read(path);
+        return JsonUtils.read(path, ToOpN1Definition.class);
     }
 
     public static ToOpLfResult readLfResult(@NonNull String lfResultPath) {
@@ -59,7 +60,7 @@ public final class InputFilesReader {
     private static ToOpLfResult readLfResult(Path path) throws IOException {
         String extension = FileNameUtils.getExtension(path.getFileName());
         if (extension.equals("json")) {
-            return ToOpLfResult.readJson(path);
+            return JsonUtils.read(path, ToOpLfResult.class);
         }
         return ToOpLfResultParquetReader.read(path);
     }
@@ -117,7 +118,7 @@ public final class InputFilesReader {
 
     public static CracGenerationParameters readCracGenerationParameters(@NonNull String cracGenerationParametersPath) {
         Path path = Path.of(cracGenerationParametersPath);
-        return CracGenerationParameters.read(path);
+        return JsonUtils.read(path, CracGenerationParameters.class);
     }
 
     private InputFilesReader() {

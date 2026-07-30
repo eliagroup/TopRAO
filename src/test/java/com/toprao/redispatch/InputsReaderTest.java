@@ -174,6 +174,18 @@ public class InputsReaderTest {
         assertCnecResult(lfResult.getResults().get(5), "BASECASE", "L1", 1, 0.282, 9.68);
     }
 
+    @Test
+    void testReadLfResultsJson() {
+        String branchResultsPath = InputsReaderTest.class.getResource("/redispatch/2nodes/branch_results.json").getPath();
+        ToOpLfResult lfResult = InputFilesReader.readLfResult(branchResultsPath);
+
+        assertThat(lfResult.getResults()).hasSize(4);
+        assertCnecResult(lfResult.getResults().get(0), "BASECASE", "FRANCE_BELGIUM_1", 1, 0.53, -266.67);
+        assertCnecResult(lfResult.getResults().get(1), "BASECASE", "FRANCE_BELGIUM_2", 1, 1.07, -533.33);
+        assertCnecResult(lfResult.getResults().get(2), "CO_FRANCE_BELGIUM_1", "FRANCE_BELGIUM_2", 1, 1.6, -800);
+        assertCnecResult(lfResult.getResults().get(3), "CO_FRANCE_BELGIUM_2", "FRANCE_BELGIUM_1", 1, 1.6, -800);
+    }
+
     void assertCnecResult(ToOpCnecResult res, String contingency, String element, int side, double loading, double p) {
         assertThat(res.contingency()).isEqualTo(contingency);
         assertThat(res.element()).isEqualTo(element);

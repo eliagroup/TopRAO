@@ -9,15 +9,8 @@
 
 package com.toprao.toop.data;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.toprao.JsonUtils;
 import lombok.Getter;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UncheckedIOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -87,31 +80,6 @@ public class ToOpLfResult {
 
     public List<ToOpCnecResult> getLfResultsForContingency(String contingencyId) {
         return indexByContingencyId.getOrDefault(contingencyId, null);
-    }
-
-    public static ToOpLfResult readJson(Path filePath) {
-        try (InputStream is = Files.newInputStream(filePath)) {
-            return readFromInputStream(is);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-    }
-
-    public static ToOpLfResult readFromInputStream(InputStream is) {
-        Objects.requireNonNull(is);
-        try {
-            return new ToOpLfResult(JsonUtils.getObjectMapper().readValue(is, new TypeReference<>() { }));
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-    }
-
-    public void write(Path p) {
-        try {
-            JsonUtils.getObjectMapper().writeValue(p.toFile(), this.getResults());
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
     }
 
 }
