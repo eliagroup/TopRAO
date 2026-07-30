@@ -18,10 +18,10 @@ import java.util.List;
 @Getter
 public class RaoSummary {
 
-    private boolean isSecure;
-    private double functionalCost;
-    private List<ActionSummary> actions;
-    private List<CnecSummary> limitingElements;
+    private final boolean isSecure;
+    private final double functionalCost;
+    private final List<ActionSummary> actions;
+    private final List<CnecSummary> limitingElements;
 
     @JsonCreator
     public RaoSummary(@JsonProperty("secure") boolean isSecure,
@@ -30,8 +30,8 @@ public class RaoSummary {
                       @JsonProperty("limiting_elements")List<CnecSummary> limitingElements) {
         this.isSecure = isSecure;
         this.functionalCost = functionalCost;
-        this.actions = actions;
-        this.limitingElements = limitingElements;
+        this.actions = List.copyOf(actions);
+        this.limitingElements = List.copyOf(limitingElements);
     }
 
 }
