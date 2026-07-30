@@ -111,6 +111,22 @@ public class SaRunnerTest {
     }
 
     @Test
+    void saResultOnTieLine() {
+        Network network = TestNetworkFactory.createWithPstAndTieLine();
+        List<Contingency> contingencies = List.of(new Contingency("CO_1", List.of(new BranchContingency("L1"))));
+        List<StateMonitor> stateMonitors = List.of(new StateMonitor(ContingencyContext.all(), Set.of("ONE"), Set.of(), Set.of()),
+                new StateMonitor(ContingencyContext.all(), Set.of("TWO"), Set.of(), Set.of()));
+
+        SecurityAnalysisResult saResult = new SecurityAnalysisRunner().run(network, contingencies, stateMonitors, SecurityAnalysisRunner.createLfParameters(), 1);
+        ToOpLfResult lfResult = new SaResultsConverter().convertResults(saResult, network);
+
+        assertLfResult(lfResult, "BASECASE", "ONE", 1, 97.116, 0.31);
+        assertLfResult(lfResult, "BASECASE", "TWO", 1, -96.9719, 0.31);
+        assertLfResult(lfResult, "CO_1", "ONE", 1, 98.623, 0.317);
+        assertLfResult(lfResult, "CO_1", "TWO", 1, -98.4729, 0.317);
+    }
+
+    @Test
     void sa2nodesLfResultSides2() {
         Network network = NetworkImportsUtil.import2NodesNetwork();
         network.getLineStream().forEach(l -> l.getOrCreateSelectedOperationalLimitsGroup1().removeCurrentLimits());

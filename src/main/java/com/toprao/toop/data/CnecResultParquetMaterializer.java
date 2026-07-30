@@ -61,19 +61,8 @@ public class CnecResultParquetMaterializer extends RecordMaterializer<ToOpCnecRe
         private Object currentRecord;
 
         static ToOpCnecResultGroupConverter create(MessageType schema, Class<ToOpCnecResult> recordClass) {
-            Constructor<ToOpCnecResult> ctor = findCtor(recordClass, schema.getFields().size());
+            Constructor<ToOpCnecResult> ctor = (Constructor<ToOpCnecResult>) ToOpCnecResult.class.getConstructors()[0];
             return new ToOpCnecResultGroupConverter(schema, ctor);
-        }
-
-        private static Constructor<ToOpCnecResult> findCtor(Class<ToOpCnecResult> recordClass, int paramCount) {
-            for (Constructor<?> c : recordClass.getConstructors()) {
-                if (c.getParameterCount() == paramCount) {
-                    @SuppressWarnings("unchecked")
-                    Constructor<ToOpCnecResult> cc = (Constructor<ToOpCnecResult>) c;
-                    return cc;
-                }
-            }
-            throw new IllegalArgumentException("No matching constructor found for record");
         }
 
         private ToOpCnecResultGroupConverter(MessageType schema, Constructor<ToOpCnecResult> ctor) {
@@ -124,24 +113,6 @@ public class CnecResultParquetMaterializer extends RecordMaterializer<ToOpCnecRe
                 for (int i = 0; i < ctorParamNames.length; i++) {
                     String paramName = ctorParamNames[i];
                     FieldSlot s = slotByName.get(paramName);
-                    if (s == null) {
-                        // fallback: if parameter not found by name, use slot at same index if exists
-                        if (i < slots.length) {
-                            s = slots[i];
-                        }
-                    }
-                    if (s == null || s.value == null) {
-                        // supply defaults: null for strings, 0.0 / 0 for primitives
-                        Class<?> paramType = ctor.getParameterTypes()[i];
-                        if (paramType == double.class) {
-                            args[i] = 0.0d;
-                        } else if (paramType == int.class) {
-                            args[i] = 0;
-                        } else {
-                            args[i] = null;
-                        }
-                        continue;
-                    }
 
                     // Convert boxed values to expected parameter type
                     Class<?> paramType = ctor.getParameterTypes()[i];
@@ -159,8 +130,6 @@ public class CnecResultParquetMaterializer extends RecordMaterializer<ToOpCnecRe
                 }
 
                 currentRecord = ctor.newInstance(args);
-            } catch (RuntimeException re) {
-                throw re;
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }

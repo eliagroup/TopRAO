@@ -28,7 +28,6 @@ import lombok.NonNull;
 import org.apache.commons.compress.utils.FileNameUtils;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
@@ -49,15 +48,10 @@ public final class InputFilesReader {
 
     public static ToOpLfResult readLfResult(@NonNull String lfResultPath) {
         Path path = Path.of(lfResultPath);
-        try {
-            return readLfResult(path);
-        } catch (IOException e) {
-            // TODO handle IO exception inside the class
-            throw new RuntimeException("IO Exception : " + e.getMessage());
-        }
+        return readLfResult(path);
     }
 
-    private static ToOpLfResult readLfResult(Path path) throws IOException {
+    private static ToOpLfResult readLfResult(Path path) {
         String extension = FileNameUtils.getExtension(path.getFileName());
         if (extension.equals("json")) {
             return JsonUtils.read(path, ToOpLfResult.class);

@@ -60,10 +60,10 @@ public class CliTest {
             "-t", s,
             "-r", raoParametersPath,
             "-c", cracGenerationParametersPath,
-            "-o", tempPath.toAbsolutePath().toString()};
+            "-o", tempPath.resolve("results").toAbsolutePath().toString()};
         Main.runRedispatch(args);
 
-        RaoSummary raoSummary = JsonUtils.read(tempPath.resolve("rao_summary.json"), RaoSummary.class);
+        RaoSummary raoSummary = JsonUtils.read(tempPath.resolve("results").resolve("rao_summary.json"), RaoSummary.class);
 
         assertThat(raoSummary.isSecure()).isTrue();
         assertThat(raoSummary.getFunctionalCost()).isEqualTo(1440); // costs up and down are set to 2

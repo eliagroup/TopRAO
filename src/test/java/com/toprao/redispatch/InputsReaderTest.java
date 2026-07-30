@@ -25,11 +25,13 @@ import org.assertj.core.data.Offset;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 public class InputsReaderTest {
 
@@ -184,6 +186,22 @@ public class InputsReaderTest {
         assertCnecResult(lfResult.getResults().get(1), "BASECASE", "FRANCE_BELGIUM_2", 1, 1.07, -533.33);
         assertCnecResult(lfResult.getResults().get(2), "CO_FRANCE_BELGIUM_1", "FRANCE_BELGIUM_2", 1, 1.6, -800);
         assertCnecResult(lfResult.getResults().get(3), "CO_FRANCE_BELGIUM_2", "FRANCE_BELGIUM_1", 1, 1.6, -800);
+    }
+
+    @Test
+    void testReadLfResultsJsonPathNotFound() {
+        String branchResultsPath = "/home/non_existing.json";
+        assertThatExceptionOfType(UncheckedIOException.class)
+                .isThrownBy(() -> InputFilesReader.readLfResult(branchResultsPath))
+                .withMessage("java.nio.file.NoSuchFileException: /home/non_existing.json");
+    }
+
+    @Test
+    void testReadLfResultsParquetPathNotFound() {
+        String branchResultsPath = "/home/non_existing.parquet";
+        assertThatExceptionOfType(UncheckedIOException.class)
+                .isThrownBy(() -> InputFilesReader.readLfResult(branchResultsPath))
+                .withMessage("java.io.FileNotFoundException: File file:/home/non_existing.parquet does not exist");
     }
 
     void assertCnecResult(ToOpCnecResult res, String contingency, String element, int side, double loading, double p) {

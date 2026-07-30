@@ -106,7 +106,6 @@ public class SaResultsConverter {
                 return tieLine.get();
             }
         }
-
         throw new PowsyblException(MessageFormat.format("Branch {0} not found", branchResult.getBranchId()));
     }
 
