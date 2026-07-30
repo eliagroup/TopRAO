@@ -182,10 +182,10 @@ public class InputsReaderTest {
         ToOpLfResult lfResult = InputFilesReader.readLfResult(branchResultsPath);
 
         assertThat(lfResult.getResults()).hasSize(4);
-        assertCnecResult(lfResult.getResults().get(0), "BASECASE", "FRANCE_BELGIUM_1", 1, 0.53, -266.67);
-        assertCnecResult(lfResult.getResults().get(1), "BASECASE", "FRANCE_BELGIUM_2", 1, 1.07, -533.33);
-        assertCnecResult(lfResult.getResults().get(2), "CO_FRANCE_BELGIUM_1", "FRANCE_BELGIUM_2", 1, 1.6, -800);
-        assertCnecResult(lfResult.getResults().get(3), "CO_FRANCE_BELGIUM_2", "FRANCE_BELGIUM_1", 1, 1.6, -800);
+        assertCnecResult(lfResult.getResults().get(0), "CO_FRANCE_BELGIUM_1", "FRANCE_BELGIUM_2", 1, 1.6, -800);
+        assertCnecResult(lfResult.getResults().get(1), "CO_FRANCE_BELGIUM_2", "FRANCE_BELGIUM_1", 1, 1.6, -800);
+        assertCnecResult(lfResult.getResults().get(2), "BASECASE", "FRANCE_BELGIUM_2", 1, 1.07, -533.33);
+        assertCnecResult(lfResult.getResults().get(3), "BASECASE", "FRANCE_BELGIUM_1", 1, 0.53, -266.67);
     }
 
     @Test
