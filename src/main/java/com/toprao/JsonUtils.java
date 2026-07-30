@@ -10,6 +10,7 @@
 package com.toprao;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -17,21 +18,52 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.toprao.toop.data.ToOpLfResult;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public final class JsonUtils {
 
     private JsonUtils() {
     }
 
+    public static <C> C read(Path path, Class<C> clazz) {
+        try (InputStream is = Files.newInputStream(path)) {
+            return read(is, clazz);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    public static <C> C read(InputStream is, Class<C> clazz) {
+        try {
+            if (clazz.equals(ToOpLfResult.class)) {
+                return (C) new ToOpLfResult(JsonUtils.getObjectMapper().readValue(is, new TypeReference<>() { }));
+            }
+            return JsonUtils.getObjectMapper().readValue(is, clazz);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    public static void write(Path p, Object object) {
+        try {
+            JsonUtils.getObjectMapper().writeValue(p.toFile(), object);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
     public static ObjectMapper getObjectMapper() {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-//        objectMapper.configure(JsonParser.Feature.ALLOW_NON_NUMERIC_NUMBERS, true);
         objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
         JavaTimeModule module = new JavaTimeModule();
         module.addSerializer(Double.class, new Double2DecimalSerializer());

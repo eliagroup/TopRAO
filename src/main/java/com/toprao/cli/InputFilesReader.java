@@ -19,6 +19,7 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.openrao.raoapi.json.JsonRaoParameters;
 import com.powsybl.openrao.raoapi.parameters.RaoParameters;
 import com.powsybl.openrao.roda.parameters.RodaParameters;
+import com.toprao.JsonUtils;
 import com.toprao.crac.CracGenerationParameters;
 import com.toprao.toop.data.ToOpLfResult;
 import com.toprao.toop.data.ToOpLfResultParquetReader;
@@ -27,7 +28,6 @@ import lombok.NonNull;
 import org.apache.commons.compress.utils.FileNameUtils;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
@@ -43,23 +43,18 @@ public final class InputFilesReader {
 
     public static ToOpN1Definition readN1Definition(@NonNull String n1DefinitionPath) {
         Path path = Path.of(n1DefinitionPath);
-        return ToOpN1Definition.read(path);
+        return JsonUtils.read(path, ToOpN1Definition.class);
     }
 
     public static ToOpLfResult readLfResult(@NonNull String lfResultPath) {
         Path path = Path.of(lfResultPath);
-        try {
-            return readLfResult(path);
-        } catch (IOException e) {
-            // TODO handle IO exception inside the class
-            throw new RuntimeException("IO Exception : " + e.getMessage());
-        }
+        return readLfResult(path);
     }
 
-    private static ToOpLfResult readLfResult(Path path) throws IOException {
+    private static ToOpLfResult readLfResult(Path path) {
         String extension = FileNameUtils.getExtension(path.getFileName());
         if (extension.equals("json")) {
-            return ToOpLfResult.readJson(path);
+            return JsonUtils.read(path, ToOpLfResult.class);
         }
         return ToOpLfResultParquetReader.read(path);
     }
@@ -117,7 +112,7 @@ public final class InputFilesReader {
 
     public static CracGenerationParameters readCracGenerationParameters(@NonNull String cracGenerationParametersPath) {
         Path path = Path.of(cracGenerationParametersPath);
-        return CracGenerationParameters.read(path);
+        return JsonUtils.read(path, CracGenerationParameters.class);
     }
 
     private InputFilesReader() {

@@ -76,8 +76,21 @@ public class SaResultsConverter {
     private ToOpCnecResult convertCnec(String contingencyId, BranchResult branchResult, Network network) {
         Branch<?> branch = getBranch(branchResult, network);
         double branchLoading1 = getBranchLoading1(branch, branchResult);
-        double branchLoading = Double.isNaN(branchLoading1) ? getBranchLoading2(branch, branchResult) : branchLoading1;
-        return new ToOpCnecResult(branchResult.getBranchId(), contingencyId, 1, branchLoading, branchResult.getP1());
+
+        int side;
+        double p;
+        double loading;
+
+        if (!Double.isNaN(branchLoading1)) {
+            side = 1;
+            loading = branchLoading1;
+            p = branchResult.getP1();
+        } else {
+            side = 2;
+            loading = getBranchLoading2(branch, branchResult);
+            p = branchResult.getP2();
+        }
+        return new ToOpCnecResult(branchResult.getBranchId(), contingencyId, side, loading, p);
     }
 
     private Branch<?> getBranch(BranchResult branchResult, Network network) {
@@ -93,7 +106,6 @@ public class SaResultsConverter {
                 return tieLine.get();
             }
         }
-
         throw new PowsyblException(MessageFormat.format("Branch {0} not found", branchResult.getBranchId()));
     }
 

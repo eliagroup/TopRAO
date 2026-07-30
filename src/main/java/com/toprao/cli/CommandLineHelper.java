@@ -10,11 +10,13 @@
 package com.toprao.cli;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.cli.help.HelpFormatter;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.Optional;
 
 public final class CommandLineHelper {
@@ -34,25 +36,22 @@ public final class CommandLineHelper {
 
     private CommandLineHelper() { }
 
-    public static RedispatchCliOptions parseCommandLineOptions(String[] args) {
+    public static RedispatchCliOptions parseCommandLineOptions(String[] args, HelpFormatter formatter) {
         Options options = buildCommandLineOptions();
 
         org.apache.commons.cli.CommandLineParser parser = new CommandLineParser(HELP_OPT);
-        // TODO replace with org.apache.commons.cli.help.HelpFormatter
-        HelpFormatter formatter = new HelpFormatter();
-        CommandLine cmd = null;
+        CommandLine cmd;
 
         try {
             cmd = parser.parse(options, args);
         } catch (ParseException e) {
-            formatter.printHelp(CMD_LINE_SYNTAX, options);
-            System.out.println(e.getMessage());
-            System.exit(1);
+            printHelp(formatter, options);
+            throw new IllegalArgumentException("Input arguments incorrect, check help message");
         }
 
         if (cmd.hasOption(HELP_OPT)) {
-            formatter.printHelp(CMD_LINE_SYNTAX, options);
-            System.exit(0);
+            printHelp(formatter, options);
+            return null;
         }
 
         String networkFilePath = readRequired(cmd, GRID_OPT);
@@ -68,6 +67,17 @@ public final class CommandLineHelper {
         return new RedispatchCliOptions(networkFilePath, n1DefFilePath, lfResultsFilePath, topologicalActionFilePath, raoParametersFilePath, cracGenerationParametersFilePath, outputPath);
     }
 
+    private static void printHelp(HelpFormatter formatter, Options options) {
+        String header = "";
+        String footer = "";
+
+        try {
+            formatter.printHelp(CMD_LINE_SYNTAX, header, options, footer, true);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
     private static String readRequired(CommandLine cmd, String optName) {
         String networkFilePath = cmd.getOptionValue(optName);
         checkRequiredOption(networkFilePath, optName);
@@ -76,8 +86,7 @@ public final class CommandLineHelper {
 
     private static void checkRequiredOption(String input, String optName) {
         if (input == null) {
-            System.err.printf("You must define --%s. Use --help for extra information.%n", optName);
-            System.exit(1);
+            throw new IllegalArgumentException("Argument %s is not defined. Chexk --help for more information".formatted(optName));
         }
     }
 
@@ -89,7 +98,7 @@ public final class CommandLineHelper {
         return input;
     }
 
-    private static Options buildCommandLineOptions() {
+    static Options buildCommandLineOptions() {
         Options options = new Options();
         Option helpOption = new Option(HELP_OPT.substring(0, 1), HELP_OPT, false, "Print this help message");
         options.addOption(helpOption);

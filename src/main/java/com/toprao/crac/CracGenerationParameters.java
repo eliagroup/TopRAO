@@ -10,17 +10,10 @@
 package com.toprao.crac;
 
 import com.powsybl.iidm.network.Country;
-import com.toprao.JsonUtils;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UncheckedIOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Objects;
 import java.util.Set;
 
 @NoArgsConstructor
@@ -64,30 +57,5 @@ public class CracGenerationParameters {
     private double limitMultiplierPreventive = LIMIT_MULTIPLIER_PREVENTIVE_DEFAULT_VALUE;
     private double limitMultiplierOutage = LIMIT_MULTIPLIER_OUTAGE_DEFAULT_VALUE;
     private double limitMultiplierCurative = LIMIT_MULTIPLIER_CURATIVE_DEFAULT_VALUE;
-
-    public static CracGenerationParameters read(Path filePath) {
-        try (InputStream is = Files.newInputStream(filePath)) {
-            return readFromInputStream(is);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-    }
-
-    public static CracGenerationParameters readFromInputStream(InputStream is) {
-        Objects.requireNonNull(is);
-        try {
-            return JsonUtils.getObjectMapper().readValue(is, CracGenerationParameters.class);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-    }
-
-    public void write(Path p) {
-        try {
-            JsonUtils.getObjectMapper().writeValue(p.toFile(), this);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-    }
 
 }
