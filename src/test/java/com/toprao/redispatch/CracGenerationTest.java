@@ -151,6 +151,33 @@ public class CracGenerationTest {
     }
 
     @Test
+    void keepBranchHasRequiredDiffOnOneSide() {
+        initFourBus();
+        List<ToOpCnecResult> cnecResults = List.of(baseCaseResult(branch1, 1, 0.8, 40),
+                baseCaseResult(branch1, 2, 0.8, 40),
+                contingencyResult(branch1, contingency2, 1, 0.8, 40),
+                contingencyResult(branch1, contingency2, 2, 0.98, 49));
+        lfResult = new ToOpLfResult(cnecResults);
+        FullPreventiveRaoSpecifier raoSpecifier = new FullPreventiveRaoSpecifier(n1Definition, lfResult, parameters);
+        Crac crac = RaoRunner.generateCrac(raoSpecifier, network);
+        assertThat(crac.getCnecs()).containsExactlyInAnyOrder(
+                crac.getCnec("l14_CO_l13_outage"),
+                crac.getCnec("l14_preventive"));
+
+        // swap sides
+        cnecResults = List.of(baseCaseResult(branch1, 0.8, 40),
+                baseCaseResult(branch1, 2, 0.8, 40),
+                contingencyResult(branch1, contingency2, 2, 0.8, 40),
+                contingencyResult(branch1, contingency2, 1, 0.98, 49));
+        lfResult = new ToOpLfResult(cnecResults);
+        FullPreventiveRaoSpecifier raoSpecifier2 = new FullPreventiveRaoSpecifier(n1Definition, lfResult, parameters);
+        Crac crac2 = RaoRunner.generateCrac(raoSpecifier2, network);
+        assertThat(crac2.getCnecs()).containsExactlyInAnyOrder(
+                crac2.getCnec("l14_CO_l13_outage"),
+                crac2.getCnec("l14_preventive"));
+    }
+
+    @Test
     void monitoredBranchIgnoredWhenNoLimits() {
         initFourBus();
         network.getLine("l14").getOrCreateSelectedOperationalLimitsGroup1().removeActivePowerLimits();
@@ -337,11 +364,19 @@ public class CracGenerationTest {
     }
 
     ToOpCnecResult baseCaseResult(ToOpGridElement gridElement, double loading, double p) {
-        return new ToOpCnecResult(gridElement.getId(), "BASECASE", 1, loading, p);
+        return baseCaseResult(gridElement, 1, loading, p);
+    }
+
+    ToOpCnecResult baseCaseResult(ToOpGridElement gridElement, int side, double loading, double p) {
+        return new ToOpCnecResult(gridElement.getId(), "BASECASE", side, loading, p);
     }
 
     ToOpCnecResult contingencyResult(ToOpGridElement gridElement, ToOpContingency contingency, double loading, double p) {
-        return new ToOpCnecResult(gridElement.getId(), contingency.getId(), 1, loading, p);
+        return contingencyResult(gridElement, contingency, 1, loading, p);
+    }
+
+    ToOpCnecResult contingencyResult(ToOpGridElement gridElement, ToOpContingency contingency, int side, double loading, double p) {
+        return new ToOpCnecResult(gridElement.getId(), contingency.getId(), side, loading, p);
     }
 
 }

@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @AllArgsConstructor
@@ -76,8 +77,9 @@ public abstract class AbstractCnecFilteringSpecifier implements CracCreationSpec
         List<String> n1DefContingencyIds = n1Definition.getContingencies().stream().map(c -> c.getId()).toList();
         List<String> monitoredElements = n1Definition.getMonitoredElements().stream().map(e -> e.getId()).toList();
 
-        Map<String, ToOpCnecResult> baseCaseResults = toOpLfResult.getLfResultsForContingency(BASE_CASE_ID)
-                .stream().collect(Collectors.toMap(r -> r.element(), r -> r));
+        Map<String, List<ToOpCnecResult>> baseCaseResults = toOpLfResult.getLfResultsForContingency(BASE_CASE_ID)
+                .stream()
+                .collect(Collectors.groupingBy(r -> r.element()));
 
         List<ToOpCnecResult> resultsOk = toOpLfResult.getResults()
                 .stream()
@@ -89,14 +91,15 @@ public abstract class AbstractCnecFilteringSpecifier implements CracCreationSpec
                 .collect(Collectors.groupingBy(r -> r.contingency()));
     }
 
-    private boolean isAffectedByContingency(ToOpCnecResult r, Map<String, ToOpCnecResult> baseCaseResults) {
-        ToOpCnecResult baseCaseRes = baseCaseResults.get(r.element());
-        if (baseCaseRes == null) {
+    private boolean isAffectedByContingency(ToOpCnecResult r, Map<String, List<ToOpCnecResult>> baseCaseResults) {
+        Optional<ToOpCnecResult> baseCaseRes = baseCaseResults.get(r.element()).stream()
+                .filter(bcr -> bcr.side() == r.side())
+                .findFirst();
+        if (baseCaseRes.isEmpty()) {
             log.warn("No base case result for {}", r.element());
             return false;
         }
-
-        return Math.abs(baseCaseRes.loading() - r.loading()) > cracGenerationParameters.getAffectedCnecMinLoadingDiff()
-                && Math.abs(baseCaseRes.p() - r.p()) > cracGenerationParameters.getAffectedCnecMinActivePowerDiff();
+        return Math.abs(baseCaseRes.get().loading() - r.loading()) > cracGenerationParameters.getAffectedCnecMinLoadingDiff()
+                && Math.abs(baseCaseRes.get().p() - r.p()) > cracGenerationParameters.getAffectedCnecMinActivePowerDiff();
     }
 }
