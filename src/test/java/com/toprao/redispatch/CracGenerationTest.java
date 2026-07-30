@@ -152,10 +152,10 @@ public class CracGenerationTest {
 
     @Test
     void keepBranchHasRequiredDiffOnOneSide() {
-        List<ToOpCnecResult> cnecResults = List.of(baseCaseResult(l14, 1, 0.8, 40),
-                baseCaseResult(l14, 2, 0.8, 40),
-                contingencyResult(l14, coL13, 1, 0.8, 40),
-                contingencyResult(l14, coL13, 2, 0.98, 49));
+        List<ToOpCnecResult> cnecResults = List.of(baseCaseResult(branch1, 1, 0.8, 40),
+                baseCaseResult(branch1, 2, 0.8, 40),
+                contingencyResult(branch1, contingency1, 1, 0.8, 40),
+                contingencyResult(branch1, contingency1, 2, 0.98, 49));
         lfResult = new ToOpLfResult(cnecResults);
         FullPreventiveRaoSpecifier raoSpecifier = new FullPreventiveRaoSpecifier(n1Definition, lfResult, parameters);
         Crac crac = RaoRunner.generateCrac(raoSpecifier, network);
@@ -164,10 +164,10 @@ public class CracGenerationTest {
                 crac.getCnec("l14_preventive"));
 
         // swap sides
-        cnecResults = List.of(baseCaseResult(l14, 0.8, 40),
-                baseCaseResult(l14, 2, 0.8, 40),
-                contingencyResult(l14, coL13, 2, 0.8, 40),
-                contingencyResult(l14, coL13, 1, 0.98, 49));
+        cnecResults = List.of(baseCaseResult(branch1, 0.8, 40),
+                baseCaseResult(branch1, 2, 0.8, 40),
+                contingencyResult(branch1, contingency1, 2, 0.8, 40),
+                contingencyResult(branch1, contingency1, 1, 0.98, 49));
         lfResult = new ToOpLfResult(cnecResults);
         FullPreventiveRaoSpecifier raoSpecifier2 = new FullPreventiveRaoSpecifier(n1Definition, lfResult, parameters);
         Crac crac2 = RaoRunner.generateCrac(raoSpecifier2, network);
