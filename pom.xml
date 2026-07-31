@@ -7,7 +7,7 @@
     <groupId>com.toprao</groupId>
     <artifactId>TopRao</artifactId>
     <packaging>jar</packaging>
-    <version>1.3.2-SNAPSHOT</version>
+    <version>1.3.3-SNAPSHOT</version>
 
     <name>TopRao</name>
     <description>An open source remedial actions optimization tool for power grids using ToOp and PowSyBl Open RAO</description>
