@@ -69,7 +69,7 @@ jobs:
           org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
           -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
         env:
-          SONAR_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
       # Check the Quality Gate status.
