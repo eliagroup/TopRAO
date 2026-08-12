@@ -67,6 +67,7 @@ jobs:
         run: >-
           mvn -B -DskipTests package
           org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
+          -Dsonar.projectKey=TopRAO
           -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
