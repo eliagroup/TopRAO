@@ -111,27 +111,15 @@ public class SaResultsConverter {
 
     private double getBranchLoading1(Branch<?> branch, BranchResult branchResult) {
         Optional<OperationalLimitsGroup> l1opt = branch.getSelectedOperationalLimitsGroup1();
-        if (l1opt.isPresent()) {
-            OperationalLimitsGroup l1 = l1opt.get();
-            if (l1.getCurrentLimits().isPresent()) {
-                double limit = l1opt.get().getCurrentLimits().get().getPermanentLimit();
-                double current = branchResult.getI1();
-                return current / limit;
-            }
-        }
-        return Double.NaN;
+        return l1opt.flatMap(OperationalLimitsGroup::getCurrentLimits)
+                .map(currentLimits -> branchResult.getI1() / currentLimits.getPermanentLimit())
+                .orElse(Double.NaN);
     }
 
     private double getBranchLoading2(Branch<?> branch, BranchResult branchResult) {
         Optional<OperationalLimitsGroup> l2opt = branch.getSelectedOperationalLimitsGroup2();
-        if (l2opt.isPresent()) {
-            OperationalLimitsGroup l1 = l2opt.get();
-            if (l1.getCurrentLimits().isPresent()) {
-                double limit = l2opt.get().getCurrentLimits().get().getPermanentLimit();
-                double current = branchResult.getI2();
-                return current / limit;
-            }
-        }
-        return Double.NaN;
+        return l2opt.flatMap(OperationalLimitsGroup::getCurrentLimits)
+                .map(currentLimits -> branchResult.getI2() / currentLimits.getPermanentLimit())
+                .orElse(Double.NaN);
     }
 }
