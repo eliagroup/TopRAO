@@ -96,7 +96,9 @@ public final class RedispatchComputation {
 
     private static RaoSummary createRaoSummary(TimeCoupledRaoResult result, TimeCoupledRaoInput timeCoupledRaoInput) {
         OffsetDateTime dt = timeCoupledRaoInput.getTimestampsToRun().stream().toList().getFirst();
-        Crac crac = timeCoupledRaoInput.getRaoInputs().getData(dt).get().getCrac();
+        Crac crac = timeCoupledRaoInput.getRaoInputs().getData(dt)
+            .orElseThrow(() -> new IllegalStateException("Missing RAO input for timestamp " + dt))
+            .getCrac();
 
         double totalCost = result.getFunctionalCost(crac.getLastInstant(), dt);
 
@@ -133,14 +135,8 @@ public final class RedispatchComputation {
 
     private static String getContingencyNameOrId(FlowCnec cnec) {
         Optional<Contingency> contingencyOpt = cnec.getState().getContingency();
-        if (contingencyOpt.isPresent()) {
-            if (contingencyOpt.get().getName().isPresent()) {
-                return contingencyOpt.get().getName().get();
-            } else {
-                return contingencyOpt.get().getId();
-            }
-        }
-        return "BASECASE";
+        return contingencyOpt.map(contingency -> contingency.getName().orElse(contingency.getId()))
+                .orElse("BASECASE");
     }
 
     private static ActionSummary toActionSummary(RangeAction<?> rangeAction, TimeCoupledRaoResult raoResult, State state) {
