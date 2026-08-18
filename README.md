@@ -58,22 +58,7 @@ mvn git-build-hook:configure
 
 ## Usage
 
-Once the shaded jar is generated it can be run in command line.
-
-The requested inputs are :
-- IIDM network file
-- n-1 definition json file in ToOp format
-- path for output files
-
-```bash
-java -jar TopRao-1.3.1-SNAPSHOT-shaded.jar -g grid.xiidm -n n1_definition.json -o ./
-```
-
-Use help for the additional parameters :
-
-```bash
-java -jar TopRao-1.3.1-SNAPSHOT-shaded.jar --help
-```
+See [usage](docs/usage.md)
 
 ---
 
