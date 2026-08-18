@@ -14,9 +14,9 @@ For details and inputs description see [Redispatch computation](redispatch.md)
 
 ### Optional inputs
 
-- RAO parameters json file path
-- ToOp LF results parquet file path
-- CRAC generation parameters file path
+- RAO parameters JSON file path
+- ToOp LF results Parquet file path
+- CRAC generation parameters JSON file path
 - Topological action JSON string
 
 ### Example

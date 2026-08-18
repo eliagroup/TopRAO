@@ -1,6 +1,6 @@
 # Redispatch computation
 
-This module allows to run a redispatch computation with Open RAO, based on outputs of a ToOp optimization for a specific
+This module allows running a redispatch computation with Open RAO, based on outputs of a ToOp optimization for a specific
 topology.  
 It will use the network CRAC creator available in Open RAO to build the inputs needed for the optimization.
 The CRAC creation can be customized with the [CRAC generation parameters](#crac-generation-parameters), which is a
@@ -50,7 +50,7 @@ Here is a minimal example of an N-1 definition file :
 ToOp's N-1 definition format has additional fields, but they are not mandatory and not used for redispatch computation 
 in TopRAO.
 
-### Crac generation parameters
+### CRAC generation parameters
 
 See [CRAC generation parameters](crac_generation_params.md)
 
