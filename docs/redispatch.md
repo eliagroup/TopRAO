@@ -15,8 +15,8 @@ Grid model of PowSyBl. See [IIDM documentation](https://powsybl.readthedocs.io/p
 ### N-1 definition
 
 Definition of contingencies and monitored elements used in ToOp.  
-Only the ids are needed for the elements fot TopRAO redispatch.
-Here is a minimal example of and N-1 definition file :
+Only the IDs are needed for the elements for TopRAO redispatch.
+Here is a minimal example of an N-1 definition file :
 
 ```json
 {
@@ -52,7 +52,7 @@ in TopRAO.
 
 ### Crac generation parameters
 
-See [crac generation parameters](crac_generation_params.md)
+See [CRAC generation parameters](crac_generation_params.md)
 
 ### ToOp LF results
 
@@ -60,11 +60,11 @@ List of LF results for monitored branches for all the contingencies. If this inp
 a security analysis on the grid for the contingencies and monitored elements specified in the N-1 definition.
 
 There are two possible formats for the file :
-- parquet
-columns : `element` (binary, utf8), `contingency` (binary, utf8), `side` (int64), `loading` (double), `p` (double).
+- Parquet
+columns: `element` (binary, utf8), `contingency` (binary, utf8), `side` (int64), `loading` (double), `p` (double).
 
-- json
-Example :
+- JSON
+Example:
 ```json
 [ {
   "element" : "line1",

@@ -2,9 +2,9 @@
 
 After building the shaded jar, run TopRAO from the command line.
 
-## Run open-rao redispatch computation
+## Run Open RAO redispatch computation
 
-For details and inpts description see [Redispatch computation](redispatch.md)
+For details and inputs description see [Redispatch computation](redispatch.md)
 
 ### Required inputs
 
@@ -14,10 +14,10 @@ For details and inpts description see [Redispatch computation](redispatch.md)
 
 ### Optional inputs
 
-- Rao parameters json file path
+- RAO parameters json file path
 - ToOp LF results parquet file path
-- Crac generation parameters files path
-- Topology action string
+- CRAC generation parameters file path
+- Topological action JSON string
 
 ### Example
 
