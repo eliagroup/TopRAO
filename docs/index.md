@@ -8,7 +8,7 @@ Remedial action optimization tool for large power grids, aiming to provide fast 
 - [PowSyBl Open RAO](https://github.com/powsybl/powsybl-open-rao)  
   Open-source toolbox providing a modular engine for remedial actions optimization, used in TopRAO for linearizable actions (PST tap changes and redispatch on generators).
 
-The aim of the project is to provide 3 possible computations in Java or in command line :
+The aim of the project is to provide 3 possible computations in Java or with command line :
 
 - Run a topology optimization on an IIDM grid file using ToOp.
 - Run a redispatch and PST actions optimization based on the outputs of a ToOp run for a specific topology using OpenRAO.

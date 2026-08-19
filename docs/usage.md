@@ -1,10 +1,10 @@
 # Usage
 
-After building the shaded jar (see [Quickstart](quickstart.md)), here is how to TopRAO from the command line.
+After building the shaded jar (see [Quickstart](quickstart.md)), here is how to run TopRAO from the command line.
 
 ## Run Open RAO redispatch computation
 
-For details and inputs description see [Redispatch computation](redispatch.md)
+For details and inputs see [Redispatch computation](redispatch.md).
 
 ### Required inputs
 
