@@ -8,14 +8,18 @@ in the grid.
 ### affectedCnecMinActivePowerDiff
 A branch is monitored in the RAO for a specific contingency if:
 
-$$|P_{basecase} - P_{contingency}| > affectedCnecMinActivePowerDiff $$
+$$
+|P_{basecase} - P_{contingency}| > affectedCnecMinActivePowerDiff
+$$
 
 Default value is `5` (in MW).
 
 ### affectedCnecMinLoadingDiff
 A branch is monitored in the RAO for a specific contingency if:
 
-$$|Loading_{basecase} - Loading_{contingency}| > affectedCnecMinLoadingDiff $$
+$$
+|Loading_{basecase} - Loading_{contingency}| > affectedCnecMinLoadingDiff
+$$
 
 Where $Loading_{state}$ is the ratio of the current (or active power) on the branch over the current (or active power) limit on the branch.
 
