@@ -943,12 +943,16 @@ in the grid.</p>
 <h2 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">#</a></h2>
 <h3 id="affectedcnecminactivepowerdiff">affectedCnecMinActivePowerDiff<a class="headerlink" href="#affectedcnecminactivepowerdiff" title="Permanent link">#</a></h3>
 <p>A branch is monitored in the RAO for a specific contingency if:</p>
-<p>$$|P_{basecase} - P_{contingency}| &gt; affectedCnecMinActivePowerDiff $$</p>
+<div class="arithmatex">\[
+|P_{basecase} - P_{contingency}| &gt; affectedCnecMinActivePowerDiff 
+\]</div>
 <p>Default value is <code>5</code> (in MW).</p>
 <h3 id="affectedcnecminloadingdiff">affectedCnecMinLoadingDiff<a class="headerlink" href="#affectedcnecminloadingdiff" title="Permanent link">#</a></h3>
 <p>A branch is monitored in the RAO for a specific contingency if:</p>
-<p>$$|Loading_{basecase} - Loading_{contingency}| &gt; affectedCnecMinLoadingDiff $$</p>
-<p>Where $Loading_{state}$ is the ratio of the current (or active power) on the branch over the current (or active power) limit on the branch.</p>
+<div class="arithmatex">\[
+|Loading_{basecase} - Loading_{contingency}| &gt; affectedCnecMinLoadingDiff
+\]</div>
+<p>Where <span class="arithmatex">\(Loading_{state}\)</span> is the ratio of the current (or active power) on the branch over the current (or active power) limit on the branch.</p>
 <p>Default value is <code>0.1</code></p>
 <h3 id="pstactions">pstActions<a class="headerlink" href="#pstactions" title="Permanent link">#</a></h3>
 <p>Whether PST actions should be enabled.</p>
@@ -1057,6 +1061,10 @@ in the grid.</p>
     
     
       <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
       
     
   </body>
