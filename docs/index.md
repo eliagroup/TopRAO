@@ -1,10 +1,17 @@
 # TopRAO
 
-TopRAO is a remedial action optimization tool for large power grids.
+Remedial action optimization tool for large power grids, aiming to provide fast and complete results using two power grid optimization tools :
 
-It combines topology optimization from ToOp with linear optimization from PowSyBl Open RAO.
+- [ToOp](https://github.com/eliagroup/toop)  
+  Open-source topological remedial actions optimization tool.
 
-Use this documentation for the fastest path to build and run the project:
+- [PowSyBl Open RAO](https://github.com/powsybl/powsybl-open-rao)  
+  Open-source toolbox providing a modular engine for remedial actions optimization, used in TopRAO for linearizable actions (PST tap changes and redispatch on generators).
 
-- Start with the quickstart for prerequisites and build steps.
-- Use the usage page for the command-line interface and expected inputs.
+The aim of the project is to provide 3 possible computations in Java or in command line :
+
+- Run a topology optimization on an IIDM grid file using ToOp.
+- Run a redispatch and PST actions optimization based on the outputs of a ToOp run for a specific topology using OpenRAO.
+- Run a full pipeline with topology, redispatch and PST optimization with the selection of the most promising topologies.
+
+In the current state, only the second computation is implemented.
