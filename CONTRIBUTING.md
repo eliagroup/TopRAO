@@ -1,10 +1,10 @@
-# Contributing to PROJECT NAME
+# Contributing to TopRAO
 
 We’re delighted to welcome your interest in contributing to our project.
 
 ## License
 
-When you contribute to PROJECT NAME, you acknowledge and agree to the terms set out for any current and future contributions you provide.
+When you contribute to TopRAO, you acknowledge and agree to the terms set out for any current and future contributions you provide.
 
 All contributions will be licensed according to the license specified in the repository. 
 
