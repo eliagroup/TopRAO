@@ -58,20 +58,20 @@ mvn git-build-hook:configure
 
 ## Usage
 
-See [usage](docs/usage.md)
+Read [usage](docs/usage.md)
 
 ---
 
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md)
+Read [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ---
 
 ## License
 
-See [LICENSE](LICENSE)
+Read [LICENSE](LICENSE)
 
 ---
 
