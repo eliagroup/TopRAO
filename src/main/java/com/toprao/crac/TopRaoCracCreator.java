@@ -52,14 +52,20 @@ public class TopRaoCracCreator implements CracCreator {
         return crac;
     }
 
-    private void addRedispatchActions(Crac crac) {
-        if (cracGenerationParameters.getRedispatchActions().isEmpty()) {
-            return;
-        }
-
-        cracGenerationParameters.getRedispatchActions().stream()
-                .forEach(a -> addRedispatchAction(a, crac));
+private void addRedispatchActions(Crac crac) {
+    if (!cracGenerationParameters.isRedispatchActionsActive() || cracGenerationParameters.getRedispatchActions().isEmpty()) {
+        return;
     }
+
+    cracGenerationParameters.getRedispatchActions().stream()
+            .filter(a -> a.getGeneratorId() != null)
+            .filter(a -> Double.isFinite(a.getActivationCost())
+                    && Double.isFinite(a.getVariationCostUp())
+                    && Double.isFinite(a.getVariationCostDown())
+                    && Double.isFinite(a.getActivePowerMax())
+                    && Double.isFinite(a.getActivePowerMin()))
+            .forEach(a -> addRedispatchAction(a, crac));
+}
 
     private void addRedispatchAction(RedispatchAction action, Crac crac) {
         crac.newInjectionRangeAction()
