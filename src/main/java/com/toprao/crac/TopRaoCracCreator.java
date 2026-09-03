@@ -195,7 +195,8 @@ private void addRedispatchActions(Crac crac) {
     }
 
     private boolean isAffectedByContingency(ToOpCnecResult r, Map<String, List<ToOpCnecResult>> baseCaseResults) {
-        Optional<ToOpCnecResult> baseCaseRes = baseCaseResults.get(r.element()).stream()
+        List<ToOpCnecResult> elementBaseCaseResults = baseCaseResults.getOrDefault(r.element(), List.of());
+        Optional<ToOpCnecResult> baseCaseRes = elementBaseCaseResults.stream()
                 .filter(bcr -> bcr.side() == r.side())
                 .findFirst();
         if (baseCaseRes.isEmpty()) {
