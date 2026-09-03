@@ -1,3 +1,12 @@
+/*
+ * Copyright 2026 50Hertz Transmission GmbH and Elia Transmission Belgium SA/NV
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file,
+ * you can obtain one at https://mozilla.org/MPL/2.0/.
+ * Mozilla Public License, version 2.0
+ */
+
 package com.toprao.crac;
 
 import com.powsybl.contingency.ContingencyElement;
@@ -52,20 +61,20 @@ public class TopRaoCracCreator implements CracCreator {
         return crac;
     }
 
-private void addRedispatchActions(Crac crac) {
-    if (!cracGenerationParameters.isRedispatchActionsActive() || cracGenerationParameters.getRedispatchActions().isEmpty()) {
-        return;
-    }
+    private void addRedispatchActions(Crac crac) {
+        if (!cracGenerationParameters.isRedispatchActionsActive() || cracGenerationParameters.getRedispatchActions().isEmpty()) {
+            return;
+        }
 
-    cracGenerationParameters.getRedispatchActions().stream()
-            .filter(a -> a.getGeneratorId() != null)
-            .filter(a -> Double.isFinite(a.getActivationCost())
-                    && Double.isFinite(a.getVariationCostUp())
-                    && Double.isFinite(a.getVariationCostDown())
-                    && Double.isFinite(a.getActivePowerMax())
-                    && Double.isFinite(a.getActivePowerMin()))
-            .forEach(a -> addRedispatchAction(a, crac));
-}
+        cracGenerationParameters.getRedispatchActions().stream()
+                .filter(a -> a.getGeneratorId() != null)
+                .filter(a -> Double.isFinite(a.getActivationCost())
+                        && Double.isFinite(a.getVariationCostUp())
+                        && Double.isFinite(a.getVariationCostDown())
+                        && Double.isFinite(a.getActivePowerMax())
+                        && Double.isFinite(a.getActivePowerMin()))
+                .forEach(a -> addRedispatchAction(a, crac));
+    }
 
     private void addRedispatchAction(RedispatchAction action, Crac crac) {
         crac.newInjectionRangeAction()
