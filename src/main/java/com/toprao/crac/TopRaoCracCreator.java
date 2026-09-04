@@ -135,7 +135,7 @@ public class TopRaoCracCreator implements CracCreator {
 
         if (cracGenerationParameters.isRedispatchActionsActive() && cracGenerationParameters.getRedispatchActions().isEmpty()) {
             parameters.getRedispatchingRangeActions().setIncludeAllInjections(true);
-            parameters.getRedispatchingRangeActions().setCountryFilter(cracGenerationParameters.getRangeActionsCountries());
+            parameters.getRedispatchingRangeActions().setCountryFilter(null);
 
             parameters.getRedispatchingRangeActions().setRdRaPredicate((injection, instant, context) -> instant.isPreventive()
                     && injection.getType() == IdentifiableType.GENERATOR
@@ -161,7 +161,7 @@ public class TopRaoCracCreator implements CracCreator {
         log.info("Contingency elements count : {}", selectedContingencyElementIds.size());
         parameters.getContingencies().setBranchFilter(b -> selectedContingencyElementIds.contains(b.getId()));
 
-        parameters.getCriticalElements().setCountryFilter(CracGenerationParameters.ALL_COUNTRIES_SET);
+        parameters.getCriticalElements().setCountryFilter(null);
         parameters.getCriticalElements().setOptimizedMinMaxV(CRITICAL_ELEMENTS_OPTIMIZED_MIN_V, null);
         parameters.getCriticalElements().setMonitoredMinMaxV(null);
 

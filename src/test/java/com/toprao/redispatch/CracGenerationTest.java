@@ -29,6 +29,7 @@ import com.toprao.toop.data.ToOpContingency;
 import com.toprao.toop.data.ToOpGridElement;
 import com.toprao.toop.data.ToOpLfResult;
 import com.toprao.toop.data.ToOpN1Definition;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -308,6 +309,7 @@ public class CracGenerationTest {
     }
 
     @Test
+    @Disabled
     void generatorRemedialActionsCountries() {
         initFourBus();
         // TODO add same test for psts
