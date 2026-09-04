@@ -120,7 +120,7 @@ public class TopRaoCracCreator implements CracCreator {
         parameters.getCountertradingRangeActions().setCountryFilter(Set.of());
 
         if (cracGenerationParameters.isPstActionsActive()) {
-            parameters.getPstRangeActions().setCountryFilter(cracGenerationParameters.getRangeActionsCountries());
+            parameters.getPstRangeActions().setCountryFilter(null);
             parameters.getPstRangeActions().setPstRaPredicate((pst, state, context) -> state.isPreventive());
             parameters.getPstRangeActions().setAvailableTapRangesAtInstants(
                     Map.of(
