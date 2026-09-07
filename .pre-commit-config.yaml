@@ -1,0 +1,24 @@
+default_stages: [pre-commit, pre-push]
+default_install_hook_types:
+  - pre-commit
+  - commit-msg
+fail_fast: false
+minimum_pre_commit_version: 3.6.0
+repos:
+  # Basic file integrity checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-added-large-files
+        args: ['--maxkb=10000']  # Block files larger than 10MB
+      - id: check-json
+        exclude: .vscode/settings.json
+      - id: check-yaml
+      - id: check-xml
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      - id: mixed-line-ending
+      - id: end-of-file-fixer
+      - id: detect-private-key
+      - id: no-commit-to-branch
+        args: ['--branch=main', '--branch=develop']
