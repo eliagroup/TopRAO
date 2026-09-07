@@ -19,10 +19,12 @@ WHITELIST_FILE="$SCRIPT_DIR/sensitive-files-whitelist.txt"
 WHITELIST=()
 if [ -f "$WHITELIST_FILE" ]; then
   while IFS= read -r line; do
+    # Strip trailing carriage return (CRLF files)
+    line="${line%$'\r'}"
     # Skip empty lines and comments
     [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
-    # Trim whitespace
-    line=$(echo "$line" | xargs)
+    line="${line#"${line%%[![:space:]]*}"}"
+    line="${line%"${line##*[![:space:]]}"}"
     [ -n "$line" ] && WHITELIST+=("$line")
   done < "$WHITELIST_FILE"
 else
