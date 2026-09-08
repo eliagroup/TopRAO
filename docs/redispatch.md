@@ -10,7 +10,7 @@ specific input of TopRAO's redispatch computation.
 
 ### IIDM network file
 
-Grid model of PowSyBl. See [IIDM documentation](https://powsybl.readthedocs.io/projects/powsybl-core/en/stable/grid_model/index.html).
+Grid model of PowSyBl. Read [IIDM documentation](https://powsybl.readthedocs.io/projects/powsybl-core/en/stable/grid_model/index.html).
 
 ### N-1 definition
 
@@ -52,7 +52,7 @@ in TopRAO.
 
 ### CRAC generation parameters
 
-See [CRAC generation parameters](crac_generation_params.md)
+Read [CRAC generation parameters](crac_generation_params.md)
 
 ### ToOp LF results
 
@@ -104,12 +104,12 @@ Example:
 }
 ```
 The forced actions use the powsybl-core action classes,
-see [powsybl doc](https://powsybl.readthedocs.io/projects/powsybl-core/en/stable/simulation/security/index.html#remedial-actions)
+read [powsybl doc](https://powsybl.readthedocs.io/projects/powsybl-core/en/stable/simulation/security/index.html#remedial-actions)
 for the available actions.
 
 ### RAO parameters
 
-Parameters for the RAO computation. See [open-rao RAO parameters doc](https://powsybl.readthedocs.io/projects/openrao/en/stable/parameters.html)  
+Parameters for the RAO computation. Read [open-rao RAO parameters doc](https://powsybl.readthedocs.io/projects/openrao/en/stable/parameters.html)  
 
 If not specified [default parameters](https://github.com/eliagroup/TopRAO/blob/main/src/main/resources/redispatch/DefaultRaoParameters.json)
 are used.
