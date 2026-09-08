@@ -39,7 +39,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <openrao.version>7.4.0-SNAPSHOT</openrao.version>
         <lombok.version>1.18.46</lombok.version>
-        <checkstyle.version>11.0.0</checkstyle.version>
+        <checkstyle.version>14.0.0</checkstyle.version>
         <checkstyle.plugin.version>3.6.0</checkstyle.plugin.version>
         <git-build-hook.plugin.version>3.6.0</git-build-hook.plugin.version>
         <jacoco.plugin.version>0.8.15</jacoco.plugin.version>
