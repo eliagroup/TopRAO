@@ -95,4 +95,3 @@ Example :
   "range_actions_countries": ["DE", "FR"]
 }
 ```
-

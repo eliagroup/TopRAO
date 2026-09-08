@@ -1,0 +1,16 @@
+
+# Whitelist for sensitive file type pre-commit hook
+# One pattern per line. Supports glob patterns.
+# Lines starting with # are comments and will be ignored.
+
+# Test data files in test resources
+
+src/test/resources/redispatch/2nodes/action.json
+src/test/resources/redispatch/2nodes/branch_results.json
+src/test/resources/redispatch/2nodes/crac_parameters.json
+src/test/resources/redispatch/2nodes/mini_roda_params.json
+src/test/resources/redispatch/2nodes/n1_definition_2nodes.json
+src/test/resources/redispatch/2nodes/RaoParameters.json
+src/test/resources/redispatch/2nodes/TestCase2Nodes.xiidm
+src/test/resources/branch_results.parquet
+src/test/resources/logback-test.xml
