@@ -90,8 +90,8 @@ public class ToOpLfResult {
                 } else if (Double.isNaN(p)) {
                     p = loading * completeRes.get().p() / completeRes.get().loading(); // !=0 checked before
                 }
+                fixedResults.add(new ToOpCnecResult(result.element(), result.contingency(), result.side(), loading, p));
             }
-            fixedResults.add(new ToOpCnecResult(result.element(), result.contingency(), result.side(), loading, p));
         }
 
         fixedResults.forEach(fixedRes -> replaceResult(fixedRes));
