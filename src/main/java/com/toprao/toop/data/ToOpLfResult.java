@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 @Slf4j
@@ -65,17 +66,30 @@ public class ToOpLfResult {
             double loading = result.loading();
             double p = result.p();
 
+            if (!Double.isNaN(loading) && !Double.isNaN(p)) {
+                continue;
+            }
+
             if (Double.isNaN(loading) && Double.isNaN(p)) {
                 log.error("LF result for element {} at contingency {} has null P and loading. Will be ignored.",
                         result.element(), result.contingency());
-            } else if (Double.isNaN(loading)) {
-                ToOpCnecResult completeRes = getCompleteRes(result);
-                loading = p * completeRes.loading() / completeRes.p();
-            } else if (Double.isNaN(p)) {
-                ToOpCnecResult completeRes = getCompleteRes(result);
-                p = loading * completeRes.p() / completeRes.loading();
+                removeResult(result);
             } else {
-                continue;
+                Optional<ToOpCnecResult> completeRes = getCompleteResFromOtherCase(result);
+
+                if (completeRes.isEmpty()) {
+                    log.error("LF result for element {} at contingency {} has null P or loading, " +
+                                    "and cannot be fixed using another result. Will be ignored.",
+                            result.element(), result.contingency());
+                    removeResult(result);
+                    continue;
+                }
+
+                if (Double.isNaN(loading)) {
+                    loading = p * completeRes.get().loading() / completeRes.get().p(); // !=0 checked before
+                } else if (Double.isNaN(p)) {
+                    p = loading * completeRes.get().p() / completeRes.get().loading(); // !=0 checked before
+                }
             }
             fixedResults.add(new ToOpCnecResult(result.element(), result.contingency(), result.side(), loading, p));
         }
@@ -86,23 +100,24 @@ public class ToOpLfResult {
         }
     }
 
-    private ToOpCnecResult getCompleteRes(ToOpCnecResult result) {
+    private Optional<ToOpCnecResult> getCompleteResFromOtherCase(ToOpCnecResult result) {
         // Get another result for the same element, that has P and loading values
         return indexByElementId.get(result.element()).stream()
                 .filter(res -> !Double.isNaN(res.loading()) && !Double.isNaN(res.p()))
                 .filter(res -> res.p() != 0 && res.loading() != 0)
-                .findFirst()
-                .orElseThrow(() ->
-                        new IllegalStateException("Element %s has null loading and p for all cases"
-                                .formatted(result.element())));
+                .findFirst();
     }
 
     private void replaceResult(ToOpCnecResult result) {
         ToOpCnecResult oldResult = getLfResult(result.element(), result.contingency(), result.side());
         index.put(new CnecKey(result.element(), result.contingency(), result.side()), result);
 
-        indexByElementId.get(result.element()).remove(oldResult);
-        indexByContingencyId.get(result.contingency()).remove(oldResult);
+        if (indexByElementId.containsKey(result.element())) {
+            indexByElementId.get(result.element()).remove(oldResult);
+        }
+        if (indexByContingencyId.containsKey(result.contingency())) {
+            indexByContingencyId.get(result.contingency()).remove(oldResult);
+        }
 
         indexByContingencyId.computeIfAbsent(result.contingency(), k -> new ArrayList<>()).add(result);
         indexByElementId.computeIfAbsent(result.element(), k -> new ArrayList<>()).add(result);
