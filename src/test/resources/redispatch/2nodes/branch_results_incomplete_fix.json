@@ -1,0 +1,25 @@
+[ {
+  "element" : "FRANCE_BELGIUM_1",
+  "contingency" : "BASECASE",
+  "side" : 1,
+  "loading" : 0.53,
+  "p" : -266.67
+}, {
+  "element" : "FRANCE_BELGIUM_2",
+  "contingency" : "BASECASE",
+  "side" : 1,
+  "loading" : 1.07,
+  "p" : -533.33
+}, {
+  "element" : "FRANCE_BELGIUM_2",
+  "contingency" : "CO_FRANCE_BELGIUM_1",
+  "side" : 1,
+  "loading" : 1.60,
+  "p" : "NaN"
+}, {
+  "element" : "FRANCE_BELGIUM_1",
+  "contingency" : "CO_FRANCE_BELGIUM_2",
+  "side" : 1,
+  "loading" : "NaN",
+  "p" : -800.00
+} ]

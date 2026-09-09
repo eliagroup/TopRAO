@@ -93,6 +93,53 @@ public class RedispatchComputationTest {
     }
 
     @Test
+    void runRedispatch2NodesFixedIncompleteLfResultFixed() {
+        Network network = NetworkImportsUtil.import2NodesNetwork();
+        ToOpN1Definition n1Definition = JsonUtils.read(getClass().getResourceAsStream("/redispatch/2nodes/n1_definition_2nodes.json"), ToOpN1Definition.class);
+        ToOpLfResult lfResult = JsonUtils.read(getClass().getResourceAsStream("/redispatch/2nodes/branch_results_incomplete_fix.json"), ToOpLfResult.class);
+        RaoParameters raoParameters = RaoParametersFactory.loadDefault();
+        RodaParameters forcedActions = new RodaParameters(List.of());
+        CracGenerationParameters cracGenerationParameters = new CracGenerationParameters();
+
+        RaoSummary raoSummary = RedispatchComputation.compute(network, n1Definition, lfResult, forcedActions, raoParameters, cracGenerationParameters);
+
+        assertThat(raoSummary.isSecure()).isTrue();
+
+        assertThat(raoSummary.getLimitingElements()).hasSize(4);
+        assertLimitingElement(raoSummary.getLimitingElements().get(0), "France-Belgium interconnection n°2", "CO_France-Belgium interconnection n°1", 9.5234, "MW");
+        assertLimitingElement(raoSummary.getLimitingElements().get(1), "France-Belgium interconnection n°1", "CO_France-Belgium interconnection n°2", 10.909, "MW");
+        assertLimitingElement(raoSummary.getLimitingElements().get(2), "France-Belgium interconnection n°2", "BASECASE", 172.856, "MW");
+        assertLimitingElement(raoSummary.getLimitingElements().get(3), "France-Belgium interconnection n°1", "BASECASE", 337.575, "MW");
+
+        assertThat(raoSummary.getActions()).hasSize(2);
+        assertAction(raoSummary.getActions().get(0), "RD_GEN_GENERATOR_BE_1.1_preventive", 310, 410);
+        assertAction(raoSummary.getActions().get(1), "RD_GEN_GENERATOR_FR_1_preventive", -310, 410);
+    }
+
+    @Test
+    void runRedispatch2NodesFixedIncompleteLfResultNotFixable() {
+        Network network = NetworkImportsUtil.import2NodesNetwork();
+        ToOpN1Definition n1Definition = JsonUtils.read(getClass().getResourceAsStream("/redispatch/2nodes/n1_definition_2nodes.json"), ToOpN1Definition.class);
+        ToOpLfResult lfResult = JsonUtils.read(getClass().getResourceAsStream("/redispatch/2nodes/branch_results_incomplete_no_fix.json"), ToOpLfResult.class);
+        RaoParameters raoParameters = RaoParametersFactory.loadDefault();
+        RodaParameters forcedActions = new RodaParameters(List.of());
+        CracGenerationParameters cracGenerationParameters = new CracGenerationParameters();
+
+        RaoSummary raoSummary = RedispatchComputation.compute(network, n1Definition, lfResult, forcedActions, raoParameters, cracGenerationParameters);
+
+        assertThat(raoSummary.isSecure()).isTrue();
+
+        assertThat(raoSummary.getLimitingElements()).hasSize(3);
+        assertLimitingElement(raoSummary.getLimitingElements().get(0), "France-Belgium interconnection n°2", "CO_France-Belgium interconnection n°1", 9.5234, "MW");
+        assertLimitingElement(raoSummary.getLimitingElements().get(1), "France-Belgium interconnection n°2", "BASECASE", 172.856, "MW");
+        assertLimitingElement(raoSummary.getLimitingElements().get(2), "France-Belgium interconnection n°1", "BASECASE", 337.575, "MW");
+
+        assertThat(raoSummary.getActions()).hasSize(2);
+        assertAction(raoSummary.getActions().get(0), "RD_GEN_GENERATOR_BE_1.1_preventive", 310, 410);
+        assertAction(raoSummary.getActions().get(1), "RD_GEN_GENERATOR_FR_1_preventive", -310, 410);
+    }
+
+    @Test
     void testWithRedispatchCosts() {
         cracGenerationParameters.setRedispatchActions(List.of(
                 new RedispatchAction("action_fr_1", "GENERATOR_FR_1", 2, 2, 2, 5000, 0),
