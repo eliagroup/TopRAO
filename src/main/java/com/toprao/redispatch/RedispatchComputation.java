@@ -26,9 +26,9 @@ import com.powsybl.openrao.searchtreerao.result.api.FlowResult;
 import com.powsybl.openrao.searchtreerao.result.impl.FastRaoResultImpl;
 import com.powsybl.security.PostContingencyComputationStatus;
 import com.powsybl.security.results.PostContingencyResult;
-import com.toprao.crac.CracCreationSpecifier;
+import com.toprao.crac.CracCreator;
 import com.toprao.crac.CracGenerationParameters;
-import com.toprao.crac.FullPreventiveRaoSpecifier;
+import com.toprao.crac.TopRaoCracCreator;
 import com.toprao.redispatch.result.ActionSummary;
 import com.toprao.redispatch.result.ActionType;
 import com.toprao.redispatch.result.CnecSummary;
@@ -83,12 +83,12 @@ public final class RedispatchComputation {
                                @NonNull RodaParameters forcedActions,
                                @NonNull RaoParameters raoParameters,
                                @NonNull CracGenerationParameters cracGenerationParameters) {
-
+        lfResult.validateCnecResults(n1Definition);
         addRodaParameters(raoParameters, forcedActions);
 
-        CracCreationSpecifier cracCreationSpecifier = new FullPreventiveRaoSpecifier(n1Definition, lfResult, cracGenerationParameters);
+        CracCreator cracCreator = new TopRaoCracCreator(cracGenerationParameters, n1Definition, lfResult);
         RaoRunner raoRunner = new RaoRunner();
-        TimeCoupledRaoResult raoResult = raoRunner.run(network, cracCreationSpecifier, raoParameters);
+        TimeCoupledRaoResult raoResult = raoRunner.run(network, cracCreator, raoParameters);
 
         return createRaoSummary(raoResult, raoRunner.getTimeRaoInput());
 
