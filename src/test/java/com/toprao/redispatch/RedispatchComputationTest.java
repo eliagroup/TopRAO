@@ -33,12 +33,15 @@ import java.nio.file.Path;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class RedispatchComputationTest {
 
     public static final Offset<Double> OFFSET = Offset.offset(1e-3);
+
+    public static final String PREVENTIVE_SCENARIO = "PreventiveScenario";
 
     @Test
     void runRedispatch2Nodes() {
@@ -97,14 +100,45 @@ public class RedispatchComputationTest {
         RodaParameters forcedActions = new RodaParameters(List.of());
         CracGenerationParameters cracGenerationParameters = new CracGenerationParameters();
         cracGenerationParameters.setRedispatchActions(List.of(
-                new RedispatchAction("GENERATOR_FR_1", 2, 2, 2, 5000, 0),
-                new RedispatchAction("GENERATOR_BE_1.1", 4, 3, 3, 5000, 0)));
+                new RedispatchAction("action_fr_1", "GENERATOR_FR_1", 2, 2, 2, 5000, 0),
+                new RedispatchAction("action_be_1", "GENERATOR_BE_1.1", 4, 3, 3, 5000, 0)));
 
         RaoSummary raoSummary = RedispatchComputation.compute(network, n1Definition, lfResult, forcedActions, raoParameters, cracGenerationParameters);
 
         assertThat(raoSummary.getActions()).hasSize(2);
-        assertAction(raoSummary.getActions().get(0), "RD_GEN_GENERATOR_BE_1.1_preventive", 310, 934);
-        assertAction(raoSummary.getActions().get(1), "RD_GEN_GENERATOR_FR_1_preventive", -310, 622);
+        assertAction(raoSummary.getActions().get(0), "action_be_1", 310, 934);
+        assertAction(raoSummary.getActions().get(1), "action_fr_1", -310, 622);
+    }
+
+    @Test
+    void testWithMultiNodalRedispatchActions() {
+        Network network = NetworkImportsUtil.import2NodesNetwork();
+
+        network.getGenerator("GENERATOR_BE_1.2").setTargetP(428.5);
+        network.getGenerator("GENERATOR_FR_2").setTargetP(325);
+
+        ToOpN1Definition n1Definition = JsonUtils.read(getClass().getResourceAsStream("/redispatch/2nodes/n1_definition_2nodes.json"), ToOpN1Definition.class);
+        ToOpLfResult lfResult = JsonUtils.read(getClass().getResourceAsStream("/redispatch/2nodes/branch_results.json"), ToOpLfResult.class);
+        RaoParameters raoParameters = RaoParametersFactory.loadDefault();
+        RodaParameters forcedActions = new RodaParameters(List.of());
+        CracGenerationParameters cracGenerationParameters = new CracGenerationParameters();
+        cracGenerationParameters.setRedispatchActions(List.of(
+                new RedispatchAction("fr_1", Map.of("GENERATOR_FR_1", 0.8, "GENERATOR_FR_2", 0.2),
+                        2, 2, 2, 5000, 0),
+                new RedispatchAction("be_1", Map.of("GENERATOR_BE_1.1", 0.7, "GENERATOR_BE_1.2", 0.3),
+                        4, 3, 3, 5000, 0)));
+
+        RaoSummary raoSummary = RedispatchComputation.compute(network, n1Definition, lfResult, forcedActions, raoParameters, cracGenerationParameters);
+
+        assertThat(raoSummary.getActions()).hasSize(2);
+        assertAction(raoSummary.getActions().get(0), "be_1", 292.666, 882);
+        assertAction(raoSummary.getActions().get(1), "fr_1", -292, 586);
+
+        network.getVariantManager().setWorkingVariant(PREVENTIVE_SCENARIO);
+        assertThat(network.getGenerator("GENERATOR_BE_1.1").getTargetP()).isCloseTo(1204.7, OFFSET);
+        assertThat(network.getGenerator("GENERATOR_BE_1.2").getTargetP()).isCloseTo(516.3, OFFSET);
+        assertThat(network.getGenerator("GENERATOR_FR_1").getTargetP()).isCloseTo(1066.4, OFFSET);
+        assertThat(network.getGenerator("GENERATOR_FR_2").getTargetP()).isCloseTo(266.6, OFFSET);
     }
 
     static void assertLimitingElement(CnecSummary cnec, String elementName, String contingencyName, double margin, String unit) {

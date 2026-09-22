@@ -67,7 +67,7 @@ public class TopRaoCracCreator implements CracCreator {
         }
 
         cracGenerationParameters.getRedispatchActions().stream()
-                .filter(a -> a.getGeneratorId() != null)
+                .filter(a -> !a.getGeneratorDistributionKeys().isEmpty())
                 .filter(a -> Double.isFinite(a.getActivationCost())
                         && Double.isFinite(a.getVariationCostUp())
                         && Double.isFinite(a.getVariationCostDown())
@@ -77,9 +77,8 @@ public class TopRaoCracCreator implements CracCreator {
     }
 
     private void addRedispatchAction(RedispatchAction action, Crac crac) {
-        crac.newInjectionRangeAction()
-                .withId("RD_GEN_%s_%s".formatted(action.getGeneratorId(), PREVENTIVE))
-                .withNetworkElement(action.getGeneratorId())
+        var actionAdder = crac.newInjectionRangeAction()
+                .withId(action.getId())
                 .withActivationCost(action.getActivationCost())
                 .withVariationCost(action.getVariationCostUp(), VariationDirection.UP)
                 .withVariationCost(action.getVariationCostDown(), VariationDirection.DOWN)
@@ -90,8 +89,11 @@ public class TopRaoCracCreator implements CracCreator {
                     .withMax(action.getActivePowerMax())
                     .withMin(action.getActivePowerMin())
                     .withRangeType(RangeType.ABSOLUTE)
-                    .add()
-                .add();
+                    .add();
+        action.getGeneratorDistributionKeys().forEach((id, key) ->
+                actionAdder.withNetworkElementAndKey(key, id)
+        );
+        actionAdder.add();
     }
 
     private CracCreationParameters getCracCreationParameters() {

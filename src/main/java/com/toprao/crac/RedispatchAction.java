@@ -10,21 +10,28 @@
 package com.toprao.crac;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.NonNull;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @AllArgsConstructor
 @NoArgsConstructor // for deserialization
-@Builder
-@Setter
 @Getter
 public class RedispatchAction {
-    private String generatorId;
+    @NonNull private String id;
+    Map<String, Double> generatorDistributionKeys = new HashMap<>();
     private double activationCost = Double.NaN;
     private double variationCostUp = Double.NaN;
     private double variationCostDown = Double.NaN;
     private double activePowerMax = Double.NaN;
     private double activePowerMin = Double.NaN;
+
+    public RedispatchAction(String id, String generatorId, double activationCost, double variationCostUp,
+                            double variationCostDown, double activePowerMax, double activePowerMin) {
+        this(id, Map.of(generatorId, 1.), activationCost, variationCostUp, variationCostDown, activePowerMax, activePowerMin);
+    }
+
 }

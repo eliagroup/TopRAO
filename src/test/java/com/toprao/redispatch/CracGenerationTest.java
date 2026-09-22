@@ -32,6 +32,7 @@ import com.toprao.toop.data.ToOpN1Definition;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -324,11 +325,11 @@ public class CracGenerationTest {
     void redispatchRemedialActionsFromList() {
         initFourBus();
         parameters.setRedispatchActions(List.of(
-                new RedispatchAction("g1", 20, 2, 2.1, 25, 20)));
+                new RedispatchAction("g1", Map.of("g1", 1.), 20, 2, 2.1, 25, 20)));
         CracCreator cracCreator = new TopRaoCracCreator(parameters, n1Definition, lfResult);
         Crac crac = cracCreator.generateCrac(network);
 
-        InjectionRangeAction actionG1 = crac.getInjectionRangeAction("RD_GEN_g1_preventive");
+        InjectionRangeAction actionG1 = crac.getInjectionRangeAction("g1");
 
         assertThat(crac.getRangeActions()).hasSize(1); // No actions generated on other gens.
 
