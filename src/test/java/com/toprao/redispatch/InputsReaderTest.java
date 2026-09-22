@@ -130,8 +130,8 @@ public class InputsReaderTest {
         String jsonString = """
                 {
                    "redispatch_actions" : [
-                        {},
-                        {"generator_distribution_keys" : {"gen1" : 1},
+                        {"id" : "action_1",
+                        "generator_distribution_keys" : {"gen1" : 1},
                          "activation_cost" : 100,
                          "variation_cost_up" : 1.2,
                          "variation_cost_down" : 1.5,
@@ -146,22 +146,14 @@ public class InputsReaderTest {
         CracGenerationParameters cracParams = InputFilesReader.readCracGenerationParameters(jsonFile.toString());
         List<RedispatchAction> redispatchActions = cracParams.getRedispatchActions();
 
-        RedispatchAction redispatchActionA = redispatchActions.get(0);
-        RedispatchAction redispatchActionB = redispatchActions.get(1);
+        RedispatchAction redispatchAction = redispatchActions.getFirst();
 
-        assertThat(redispatchActionA.getGeneratorDistributionKeys()).isEmpty();
-        assertThat(redispatchActionA.getActivationCost()).isNaN();
-        assertThat(redispatchActionA.getVariationCostUp()).isNaN();
-        assertThat(redispatchActionA.getVariationCostDown()).isNaN();
-        assertThat(redispatchActionA.getActivePowerMax()).isNaN();
-        assertThat(redispatchActionA.getActivePowerMin()).isNaN();
-
-        assertThat(redispatchActionB.getGeneratorDistributionKeys()).containsExactlyEntriesOf(Map.of("gen1", 1.));
-        assertThat(redispatchActionB.getActivationCost()).isEqualTo(100);
-        assertThat(redispatchActionB.getVariationCostUp()).isEqualTo(1.2);
-        assertThat(redispatchActionB.getVariationCostDown()).isEqualTo(1.5);
-        assertThat(redispatchActionB.getActivePowerMax()).isEqualTo(200);
-        assertThat(redispatchActionB.getActivePowerMin()).isEqualTo(100);
+        assertThat(redispatchAction.getGeneratorDistributionKeys()).containsExactlyEntriesOf(Map.of("gen1", 1.));
+        assertThat(redispatchAction.getActivationCost()).isEqualTo(100);
+        assertThat(redispatchAction.getVariationCostUp()).isEqualTo(1.2);
+        assertThat(redispatchAction.getVariationCostDown()).isEqualTo(1.5);
+        assertThat(redispatchAction.getActivePowerMax()).isEqualTo(200);
+        assertThat(redispatchAction.getActivePowerMin()).isEqualTo(100);
     }
 
     @Test

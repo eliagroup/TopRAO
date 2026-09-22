@@ -9,29 +9,44 @@
 
 package com.toprao.crac;
 
-import lombok.AllArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
-import java.util.HashMap;
 import java.util.Map;
 
-@AllArgsConstructor
-@NoArgsConstructor // for deserialization
 @Getter
 public class RedispatchAction {
-    @NonNull private String id;
-    Map<String, Double> generatorDistributionKeys = new HashMap<>();
-    private double activationCost = Double.NaN;
-    private double variationCostUp = Double.NaN;
-    private double variationCostDown = Double.NaN;
-    private double activePowerMax = Double.NaN;
-    private double activePowerMin = Double.NaN;
+    @NonNull private final String id;
+    Map<String, Double> generatorDistributionKeys;
+    private double activationCost;
+    private double variationCostUp;
+    private double variationCostDown;
+    private double activePowerMax;
+    private double activePowerMin;
 
     public RedispatchAction(String id, String generatorId, double activationCost, double variationCostUp,
                             double variationCostDown, double activePowerMax, double activePowerMin) {
         this(id, Map.of(generatorId, 1.), activationCost, variationCostUp, variationCostDown, activePowerMax, activePowerMin);
+    }
+
+    @JsonCreator
+    public RedispatchAction(
+            @JsonProperty(value = "id", required = true) @NonNull String id,
+            @JsonProperty(value = "generator_distribution_keys", required = true) Map<String, Double> generatorDistributionKeys,
+            @JsonProperty(value = "activation_cost", required = true) double activationCost,
+            @JsonProperty(value = "variation_cost_up", required = true) double variationCostUp,
+            @JsonProperty(value = "variation_cost_down", required = true) double variationCostDown,
+            @JsonProperty(value = "active_power_max", required = true) double activePowerMax,
+            @JsonProperty(value = "active_power_min", required = true) double activePowerMin) {
+        this.id = id;
+        this.generatorDistributionKeys = generatorDistributionKeys;
+        this.activationCost = activationCost;
+        this.variationCostUp = variationCostUp;
+        this.variationCostDown = variationCostDown;
+        this.activePowerMax = activePowerMax;
+        this.activePowerMin = activePowerMin;
     }
 
 }
