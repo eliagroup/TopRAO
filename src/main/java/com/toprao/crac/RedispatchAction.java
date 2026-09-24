@@ -12,13 +12,13 @@ package com.toprao.crac;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
-import lombok.NonNull;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @Getter
 public class RedispatchAction {
-    @NonNull private final String id;
+    private final String id;
     Map<String, Double> generatorDistributionKeys;
     private double activationCost;
     private double variationCostUp;
@@ -33,7 +33,7 @@ public class RedispatchAction {
 
     @JsonCreator
     public RedispatchAction(
-            @JsonProperty(value = "id", required = true) @NonNull String id,
+            @JsonProperty(value = "id", required = true) String id,
             @JsonProperty(value = "generator_distribution_keys", required = true) Map<String, Double> generatorDistributionKeys,
             @JsonProperty(value = "activation_cost", required = true) double activationCost,
             @JsonProperty(value = "variation_cost_up", required = true) double variationCostUp,
@@ -41,7 +41,7 @@ public class RedispatchAction {
             @JsonProperty(value = "active_power_max", required = true) double activePowerMax,
             @JsonProperty(value = "active_power_min", required = true) double activePowerMin) {
         this.id = id;
-        this.generatorDistributionKeys = generatorDistributionKeys;
+        this.generatorDistributionKeys = new HashMap<>(generatorDistributionKeys);
         this.activationCost = activationCost;
         this.variationCostUp = variationCostUp;
         this.variationCostDown = variationCostDown;
