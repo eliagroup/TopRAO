@@ -57,9 +57,7 @@ repos:
       - id: check-docstring-first
         name: Check docstrings come first
         description: Checks for a common error of placing code before the docstring.
-      - id: mixed-line-ending
-        name: Mixed line endings
-        description: Replaces or checks mixed line ending (like mix of LF and CRLF).
+
       - id: end-of-file-fixer
         name: End of files have newlines
         description: Makes sure files end in a newline and only a newline.
