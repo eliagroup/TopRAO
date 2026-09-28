@@ -19,6 +19,11 @@ import java.util.Map;
 @Getter
 public class RedispatchAction {
     private final String id;
+    /**
+     * The Generator distribution keys.
+     * Key : Id of the generator in the IIDM grid
+     * Value : Distribution key of the generator
+     */
     Map<String, Double> generatorDistributionKeys;
     private double activationCost;
     private double variationCostUp;
@@ -26,6 +31,9 @@ public class RedispatchAction {
     private double activePowerMax;
     private double activePowerMin;
 
+    /**
+     * Instantiates a new Redispatch action with one generator.
+     */
     public RedispatchAction(String id, String generatorId, double activationCost, double variationCostUp,
                             double variationCostDown, double activePowerMax, double activePowerMin) {
         this(id, Map.of(generatorId, 1.), activationCost, variationCostUp, variationCostDown, activePowerMax, activePowerMin);
