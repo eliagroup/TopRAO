@@ -15,6 +15,7 @@ import com.powsybl.iidm.network.Country;
 import com.powsybl.openrao.roda.parameters.RodaParameters;
 import com.toprao.cli.InputFilesReader;
 import com.toprao.crac.CracGenerationParameters;
+import com.toprao.crac.RedispatchAction;
 import com.toprao.toop.data.ToOpCnecResult;
 import com.toprao.toop.data.ToOpContingency;
 import com.toprao.toop.data.ToOpGridElement;
@@ -29,6 +30,7 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -83,10 +85,11 @@ public class InputsReaderTest {
                 {
                    "affected_cnec_min_active_power_diff" : 1.0,
                    "affected_cnec_min_loading_diff" : 0.1,
-                   "pst_actions" : true,
+                   "pst_actions_active" : true,
+                   "redispatch_actions" : [],
                    "pst_tap_change_max_up" : 8,
                    "pst_tap_change_max_down" : 6,
-                   "redispatch_actions" : true,
+                   "redispatch_actions_active" : true,
                    "redispatch_generator_required_max_p" : 17.5,
                    "redispatch_activation_cost" : 100.0,
                    "redispatch_cost_up" : 1.0,
@@ -105,11 +108,12 @@ public class InputsReaderTest {
         assertThat(cracParams.getAffectedCnecMinActivePowerDiff()).isEqualTo(1);
         assertThat(cracParams.getAffectedCnecMinLoadingDiff()).isEqualTo(0.1);
 
-        assertThat(cracParams.isPstActions()).isTrue();
+        assertThat(cracParams.isPstActionsActive()).isTrue();
         assertThat(cracParams.getPstTapChangeMaxUp()).isEqualTo(8);
         assertThat(cracParams.getPstTapChangeMaxDown()).isEqualTo(6);
 
-        assertThat(cracParams.isRedispatchActions()).isTrue();
+        assertThat(cracParams.isRedispatchActionsActive()).isTrue();
+        assertThat(cracParams.getRedispatchActions()).isEmpty();
         assertThat(cracParams.getRedispatchGeneratorRequiredMaxP()).isEqualTo(17.5);
         assertThat(cracParams.getRedispatchActivationCost()).isEqualTo(100);
         assertThat(cracParams.getRedispatchCostUp()).isEqualTo(1);
@@ -119,6 +123,37 @@ public class InputsReaderTest {
         assertThat(cracParams.getLimitMultiplierOutage()).isEqualTo(1);
         assertThat(cracParams.getLimitMultiplierCurative()).isEqualTo(1);
         assertThat(cracParams.getRangeActionsCountries()).containsExactlyInAnyOrder(Country.DE, Country.IT);
+    }
+
+    @Test
+    void testReadRedispatchActions(@TempDir Path tempDir) throws Exception {
+        String jsonString = """
+                {
+                   "redispatch_actions" : [
+                        {"id" : "action_1",
+                        "generator_distribution_keys" : {"gen1" : 1},
+                         "activation_cost" : 100,
+                         "variation_cost_up" : 1.2,
+                         "variation_cost_down" : 1.5,
+                         "active_power_max" : 200,
+                         "active_power_min" : 100}
+                        ]
+                }
+                """;
+
+        Path jsonFile = Files.writeString(tempDir.resolve("crac_params.json"), jsonString);
+
+        CracGenerationParameters cracParams = InputFilesReader.readCracGenerationParameters(jsonFile.toString());
+        List<RedispatchAction> redispatchActions = cracParams.getRedispatchActions();
+
+        RedispatchAction redispatchAction = redispatchActions.getFirst();
+
+        assertThat(redispatchAction.getGeneratorDistributionKeys()).containsExactlyEntriesOf(Map.of("gen1", 1.));
+        assertThat(redispatchAction.getActivationCost()).isEqualTo(100);
+        assertThat(redispatchAction.getVariationCostUp()).isEqualTo(1.2);
+        assertThat(redispatchAction.getVariationCostDown()).isEqualTo(1.5);
+        assertThat(redispatchAction.getActivePowerMax()).isEqualTo(200);
+        assertThat(redispatchAction.getActivePowerMin()).isEqualTo(100);
     }
 
     @Test

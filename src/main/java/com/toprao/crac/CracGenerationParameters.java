@@ -14,6 +14,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
 import java.util.Set;
 
 @NoArgsConstructor
@@ -25,11 +26,12 @@ public class CracGenerationParameters {
     private static double AFFECTED_CNEC_MIN_ACTIVE_POWER_DIFF_DEFAULT_VALUE = 5;
     private static double AFFECTED_CNEC_MIN_LOADING_DIFF_DEFAULT_VALUE = 0.1;
 
-    private static boolean PST_ACTIONS_DEFAULT_VALUE = true;
+    private static boolean PST_ACTIONS_ACTIVE_DEFAULT_VALUE = true;
     private static int PST_TAP_MAX_CHANGE_UP_DEFAULT_VALUE = 3;
     private static int PST_TAP_MAX_CHANGE_DOWN_DEFAULT_VALUE = 3;
 
-    private static boolean REDISPATCH_ACTIONS_DEFAULT_VALUE = true;
+    private static boolean REDISPATCH_ACTIONS_ACTIVE_DEFAULT_VALUE = true;
+    private static List<RedispatchAction> REDISPATCH_ACTIONS_DEFAULT_VALUE = List.of();
     private static double REDISPATCH_ACTIVATION_COST_DEFAULT_VALUE = 100;
     private static double REDISPATCH_GENERATOR_REQUIRED_MAX_P_DEFAULT_VALUE = 17.5;
     private static double REDISPATCH_COST_UP_DEFAULT_VALUE = 1;
@@ -43,11 +45,12 @@ public class CracGenerationParameters {
     private double affectedCnecMinActivePowerDiff = AFFECTED_CNEC_MIN_ACTIVE_POWER_DIFF_DEFAULT_VALUE;
     private double affectedCnecMinLoadingDiff = AFFECTED_CNEC_MIN_LOADING_DIFF_DEFAULT_VALUE;
 
-    private boolean pstActions = PST_ACTIONS_DEFAULT_VALUE;
+    private boolean pstActionsActive = PST_ACTIONS_ACTIVE_DEFAULT_VALUE;
     private int pstTapChangeMaxUp = PST_TAP_MAX_CHANGE_UP_DEFAULT_VALUE;
     private int pstTapChangeMaxDown = PST_TAP_MAX_CHANGE_DOWN_DEFAULT_VALUE;
 
-    private boolean redispatchActions = REDISPATCH_ACTIONS_DEFAULT_VALUE;
+    private boolean redispatchActionsActive = REDISPATCH_ACTIONS_ACTIVE_DEFAULT_VALUE;
+    private List<RedispatchAction> redispatchActions = REDISPATCH_ACTIONS_DEFAULT_VALUE;
     private double redispatchGeneratorRequiredMaxP = REDISPATCH_GENERATOR_REQUIRED_MAX_P_DEFAULT_VALUE;
     private double redispatchActivationCost = REDISPATCH_ACTIVATION_COST_DEFAULT_VALUE;
     private double redispatchCostUp = REDISPATCH_COST_UP_DEFAULT_VALUE;

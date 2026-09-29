@@ -15,16 +15,13 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.HvdcAngleDroopActivePowerControl;
 import com.powsybl.openrao.commons.TemporalDataImpl;
 import com.powsybl.openrao.data.crac.api.Crac;
-import com.powsybl.openrao.data.crac.api.CracCreationContext;
-import com.powsybl.openrao.data.crac.api.parameters.CracCreationParameters;
-import com.powsybl.openrao.data.crac.io.network.NetworkCracCreator;
 import com.powsybl.openrao.data.raoresult.api.TimeCoupledRaoResult;
 import com.powsybl.openrao.data.timecoupledconstraints.TimeCoupledConstraints;
 import com.powsybl.openrao.raoapi.RaoInput;
 import com.powsybl.openrao.raoapi.TimeCoupledRao;
 import com.powsybl.openrao.raoapi.TimeCoupledRaoInput;
 import com.powsybl.openrao.raoapi.parameters.RaoParameters;
-import com.toprao.crac.CracCreationSpecifier;
+import com.toprao.crac.CracCreator;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,16 +36,13 @@ public class RaoRunner {
 
     public static final String TIME_COUPLED_RAO = "TimeCoupledRao";
 
-    private Crac crac = null;
-
     private TimeCoupledRaoInput timeRaoInput = null;
 
-    public TimeCoupledRaoResult run(Network network, CracCreationSpecifier cracCreationSpecifier, RaoParameters parameters) {
+    public TimeCoupledRaoResult run(Network network, CracCreator cracCreator, RaoParameters parameters) {
         log.info("Preprocessing network");
         preprocessNetwork(network);
         log.info("Generating Crac");
-        crac = generateCrac(cracCreationSpecifier, network);
-        cracCreationSpecifier.postprocessCrac(crac);
+        Crac crac = cracCreator.generateCrac(network);
         log.info("Crac generated");
         log.info("Nb of CNECs : {}", crac.getCnecs().size());
         log.info("Nb of preventive CNECs: {}", crac.getCnecs().stream().filter(c -> c.getState().isPreventive()).count());
@@ -65,13 +59,6 @@ public class RaoRunner {
         Map<OffsetDateTime, RaoInput> timedInputMap = Map.of(dateTime, raoInput);
         timeRaoInput = new TimeCoupledRaoInput(new TemporalDataImpl<>(timedInputMap), new TimeCoupledConstraints());
         return TimeCoupledRao.find(TIME_COUPLED_RAO, ReportNode.NO_OP).run(timeRaoInput, parameters);
-    }
-
-    public static Crac generateCrac(CracCreationSpecifier cracCreationSpecifier, Network network) {
-        CracCreationParameters cracCreationParameters = cracCreationSpecifier.getCracCreationParameters(network);
-        CracCreationContext ccc = NetworkCracCreator.createCrac(network, cracCreationParameters);
-        ccc.getCreationReport().printCreationReport();
-        return ccc.getCrac();
     }
 
     private static void preprocessNetwork(Network network) {
