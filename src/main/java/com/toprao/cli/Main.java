@@ -72,7 +72,6 @@ public final class Main {
         RaoSummary raoSummary;
         if (opts.lfResultsFilePath().isPresent()) {
             ToOpLfResult lfResult = InputFilesReader.readLfResult(opts.lfResultsFilePath().get());
-            lfResult.validateCnecResults(n1Definition);
             raoSummary = RedispatchComputation.compute(network, n1Definition, lfResult, forcedActions, raoParameters, cracGenerationParameters);
         } else {
             raoSummary = RedispatchComputation.compute(network, n1Definition, forcedActions, raoParameters, cracGenerationParameters);

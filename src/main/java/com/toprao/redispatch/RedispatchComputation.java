@@ -83,7 +83,7 @@ public final class RedispatchComputation {
                                @NonNull RodaParameters forcedActions,
                                @NonNull RaoParameters raoParameters,
                                @NonNull CracGenerationParameters cracGenerationParameters) {
-
+        lfResult.validateCnecResults(n1Definition);
         addRodaParameters(raoParameters, forcedActions);
 
         CracCreator cracCreator = new TopRaoCracCreator(cracGenerationParameters, n1Definition, lfResult);
