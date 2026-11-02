@@ -27,7 +27,7 @@ public class RaoSummary {
     public RaoSummary(@JsonProperty("secure") boolean isSecure,
                       @JsonProperty("functional_cost") double functionalCost,
                       @JsonProperty("actions") List<ActionSummary> actions,
-                      @JsonProperty("limiting_elements")List<CnecSummary> limitingElements) {
+                      @JsonProperty("limiting_elements") List<CnecSummary> limitingElements) {
         this.isSecure = isSecure;
         this.functionalCost = functionalCost;
         this.actions = List.copyOf(actions);

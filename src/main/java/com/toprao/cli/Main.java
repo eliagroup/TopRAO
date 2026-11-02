@@ -10,18 +10,23 @@
 package com.toprao.cli;
 
 import com.powsybl.iidm.network.Network;
+import com.powsybl.openrao.data.crac.api.Crac;
 import com.powsybl.openrao.raoapi.parameters.RaoParameters;
 import com.powsybl.openrao.roda.parameters.RodaParameters;
 import com.toprao.JsonUtils;
 import com.toprao.crac.CracGenerationParameters;
-import com.toprao.redispatch.RaoParametersFactory;
+import com.toprao.crac.TopRaoCracCreator;
+import com.toprao.crac.TopRaoCracCreatorBuilder;
 import com.toprao.redispatch.RedispatchComputation;
+import com.toprao.redispatch.RedispatchComputationBuilder;
 import com.toprao.redispatch.result.RaoSummary;
 import com.toprao.toop.data.ToOpLfResult;
 import com.toprao.toop.data.ToOpN1Definition;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.cli.help.HelpFormatter;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.nio.file.Path;
 
 @Slf4j
@@ -33,7 +38,22 @@ public final class Main {
 
     public static void main(String[] args) {
         try {
-            runRedispatch(args);
+            if (args.length == 0) {
+//                CommandLineHelper.printHelp();
+                return;
+            }
+
+            String command = args[0];
+            String[] cmdArgs = java.util.Arrays.copyOfRange(args, 1, args.length);
+
+            switch (command) {
+                case "crac":
+                    generateCrac(cmdArgs);
+                    break;
+                case "redispatch":
+                    runRedispatch(cmdArgs);
+                    break;
+            }
         } catch (Exception e) {
             System.err.println(e.getMessage());
             System.exit(1);
@@ -41,42 +61,87 @@ public final class Main {
     }
 
     static void runRedispatch(String[] args) {
-        RedispatchCliOptions opts = CommandLineHelper.parseCommandLineOptions(args, HelpFormatter.builder().get());
+        RedispatchCliOptions opts = CommandLineHelper.parseRedispatchCommandLineOptions(args, HelpFormatter.builder().get());
         runRedispatch(opts);
     }
 
     static void runRedispatch(RedispatchCliOptions opts) {
-        Network network = InputFilesReader.readNetwork(opts.networkFilePath());
-        ToOpN1Definition n1Definition = InputFilesReader.readN1Definition(opts.n1DefFilePath());
+        Network network = InputFilesReader.readNetwork(opts.getNetworkFilePath());
+        ToOpN1Definition n1Definition = InputFilesReader.readN1Definition(opts.getN1DefFilePath());
 
-        RodaParameters forcedActions = InputFilesReader.readTopologicalAction(opts.topologicalAction().orElse(null));
-        RaoParameters raoParameters;
-        if (opts.raoParametersFilePath().isPresent()) {
-            raoParameters = InputFilesReader.readRaoParameters(opts.raoParametersFilePath().get());
-        } else {
-            raoParameters = RaoParametersFactory.loadDefault();
+        RedispatchComputationBuilder builder = new RedispatchComputationBuilder(network, n1Definition);
+
+        RodaParameters forcedActions = InputFilesReader.readTopologicalAction(opts.getTopologicalAction()
+                .orElse(null));
+        builder.setForcedActions(forcedActions);
+
+        if (opts.getRaoParametersFilePath().isPresent()) {
+            RaoParameters raoParameters = InputFilesReader.readRaoParameters(opts.getRaoParametersFilePath().get());
+            builder.setRaoParameters(raoParameters);
         }
 
-        CracGenerationParameters cracGenerationParameters;
-        if (opts.cracGenerationParametersPath().isPresent()) {
-            cracGenerationParameters = InputFilesReader.readCracGenerationParameters(opts.cracGenerationParametersPath().get());
-        } else {
-            cracGenerationParameters = new CracGenerationParameters();
+        if (opts.getCracGenerationParametersPath().isPresent()) {
+            CracGenerationParameters cracGenerationParameters = InputFilesReader.readCracGenerationParameters(opts.getCracGenerationParametersPath().get());
+            builder.setCracGenerationParameters(cracGenerationParameters);
         }
 
-        Path resultsPath = Path.of(opts.outputPath());
+        if (opts.getLfResultsFilePath().isPresent()) {
+            ToOpLfResult lfResult = InputFilesReader.readLfResult(opts.lfResultsFilePath);
+            builder.setLfResult(lfResult);
+        }
+
+        Path resultsPath = Path.of(opts.getOutputPath());
         if (resultsPath.toFile().mkdirs()) {
             log.debug("Created results directory {}", resultsPath);
         }
 
-        RaoSummary raoSummary;
-        if (opts.lfResultsFilePath().isPresent()) {
-            ToOpLfResult lfResult = InputFilesReader.readLfResult(opts.lfResultsFilePath().get());
-            raoSummary = RedispatchComputation.compute(network, n1Definition, lfResult, forcedActions, raoParameters, cracGenerationParameters);
-        } else {
-            raoSummary = RedispatchComputation.compute(network, n1Definition, forcedActions, raoParameters, cracGenerationParameters);
-        }
+        RedispatchComputation computation = builder.build();
+        RaoSummary raoSummary = computation.compute();
+
         JsonUtils.write(resultsPath.resolve(RAO_SUMMARY_FILE), raoSummary);
+    }
+
+    static void generateCrac(String[] args) {
+        CracGenerationCliOptions opts = CommandLineHelper.parseCracGenerationCommandLineOptions(args, HelpFormatter.builder().get());
+        generateCrac(opts);
+    }
+
+    static void generateCrac(CracGenerationCliOptions opts) {
+        // todo move logs elsewhere
+        log.info("Generating Crac");
+        Network network = InputFilesReader.readNetwork(opts.getNetworkFilePath());
+        ToOpN1Definition n1Definition = InputFilesReader.readN1Definition(opts.getN1DefFilePath());
+
+        TopRaoCracCreatorBuilder builder = new TopRaoCracCreatorBuilder(n1Definition);
+        if (opts.getCracGenerationParametersPath().isPresent()) {
+            CracGenerationParameters cracGenerationParameters = InputFilesReader.readCracGenerationParameters(opts.getCracGenerationParametersPath().get());
+            builder.setCracGenerationParameters(cracGenerationParameters);
+        }
+
+        if (opts.getLfResultsFilePath().isPresent()) {
+            ToOpLfResult lfResult = InputFilesReader.readLfResult(opts.lfResultsFilePath);
+            builder.setLfResult(lfResult);
+        }
+
+        TopRaoCracCreator cracCreator = builder.build();
+        Crac crac = cracCreator.create(network);
+
+        // todo move elsewhere
+        log.info("Crac generated");
+        log.info("Nb of CNECs : {}", crac.getCnecs().size());
+        log.info("Nb of preventive CNECs: {}", crac.getCnecs().stream().filter(c -> c.getState().isPreventive()).count());
+        log.info("Nb of curative CNECs : {}", crac.getCnecs().stream().filter(c -> !c.getState().isPreventive()).count());
+        log.info("Nb of injection actions : {}", crac.getInjectionRangeActions().size());
+        log.info("Nb of pst actions : {}", crac.getPstRangeActions().size());
+
+        // todo write crac
+        try {
+            FileOutputStream outputStream = new FileOutputStream(opts.getOutputPath() + "/crac.json");
+            crac.write("JSON", outputStream);
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
 }

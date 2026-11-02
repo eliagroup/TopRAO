@@ -9,6 +9,7 @@
 
 package com.toprao.crac;
 
+import com.powsybl.action.Action;
 import com.powsybl.contingency.ContingencyElement;
 import com.powsybl.iidm.network.Generator;
 import com.powsybl.iidm.network.IdentifiableType;
@@ -23,10 +24,17 @@ import com.powsybl.openrao.data.crac.io.network.parameters.CriticalElements;
 import com.powsybl.openrao.data.crac.io.network.parameters.NetworkCracCreationParameters;
 import com.powsybl.openrao.data.crac.io.network.parameters.PstRangeActions;
 import com.powsybl.openrao.data.crac.io.network.parameters.RangeActionCosts;
+import com.powsybl.openrao.roda.parameters.RodaParameters;
+import com.powsybl.security.PostContingencyComputationStatus;
+import com.powsybl.security.SecurityAnalysisResult;
+import com.powsybl.security.results.PostContingencyResult;
+import com.toprao.sa.SaResultsConverter;
+import com.toprao.sa.SecurityAnalysisRunner;
 import com.toprao.toop.data.ToOpCnecResult;
 import com.toprao.toop.data.ToOpLfResult;
 import com.toprao.toop.data.ToOpN1Definition;
 import lombok.AllArgsConstructor;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -46,12 +54,20 @@ public class TopRaoCracCreator implements CracCreator {
     private static final String BASE_CASE_ID = "BASECASE";
     private static final Double CRITICAL_ELEMENTS_OPTIMIZED_MIN_V = null;
 
-    private CracGenerationParameters cracGenerationParameters;
-    private ToOpN1Definition n1Definition;
+    @NonNull private CracGenerationParameters cracGenerationParameters;
+    @NonNull private ToOpN1Definition n1Definition;
     private ToOpLfResult toOpLfResult;
+    @NonNull private RodaParameters forcedActions;
+
+    public static final int SA_CPUS_COUNT = 1;
 
     @Override
-    public Crac generateCrac(Network network) {
+    public Crac create(Network network) {
+        if (toOpLfResult == null) {
+            toOpLfResult = runSa(network, n1Definition, forcedActions);
+        }
+        toOpLfResult.validateCnecResults(n1Definition);
+
         CracCreationParameters cracCreationParameters = getCracCreationParameters();
         CracCreationContext ccc = NetworkCracCreator.createCrac(network, cracCreationParameters);
         ccc.getCreationReport().printCreationReport();
@@ -216,5 +232,28 @@ public class TopRaoCracCreator implements CracCreator {
         }
         return Math.abs(baseCaseRes.get().loading() - r.loading()) > cracGenerationParameters.getAffectedCnecMinLoadingDiff()
                 && Math.abs(baseCaseRes.get().p() - r.p()) > cracGenerationParameters.getAffectedCnecMinActivePowerDiff();
+    }
+
+    private static ToOpLfResult runSa(Network network, ToOpN1Definition n1Definition, RodaParameters forcedActions) {
+        log.info("N-1 LF results not provided, running security analysis on N-1 definition");
+
+        String initialVariantId = network.getVariantManager().getWorkingVariantId();
+        String saVariantId = "SA_run";
+        network.getVariantManager().cloneVariant(initialVariantId, saVariantId, true);
+        network.getVariantManager().setWorkingVariant(saVariantId);
+
+        List<Action> networkActions = forcedActions.getForcedPreventiveActions();
+        if (!networkActions.isEmpty()) {
+            networkActions.forEach(na -> na.toModification().apply(network));
+        }
+
+        SecurityAnalysisResult saResult = new SecurityAnalysisRunner().run(network, n1Definition, SA_CPUS_COUNT);
+
+        List<PostContingencyResult> nonConvergedResults = saResult.getPostContingencyResults().stream().filter(r -> r.getStatus() != PostContingencyComputationStatus.CONVERGED).toList();
+        network.getVariantManager().setWorkingVariant(initialVariantId);
+        network.getVariantManager().removeVariant(saVariantId);
+
+        log.info("Security analysis run finished with {} non converged contingencies", nonConvergedResults.size());
+        return new SaResultsConverter().convertResults(saResult, network);
     }
 }

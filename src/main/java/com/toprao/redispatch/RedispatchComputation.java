@@ -9,7 +9,6 @@
 
 package com.toprao.redispatch;
 
-import com.powsybl.action.Action;
 import com.powsybl.contingency.Contingency;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.openrao.commons.Unit;
@@ -24,20 +23,13 @@ import com.powsybl.openrao.raoapi.parameters.RaoParameters;
 import com.powsybl.openrao.roda.parameters.RodaParameters;
 import com.powsybl.openrao.searchtreerao.result.api.FlowResult;
 import com.powsybl.openrao.searchtreerao.result.impl.FastRaoResultImpl;
-import com.powsybl.security.PostContingencyComputationStatus;
-import com.powsybl.security.results.PostContingencyResult;
 import com.toprao.crac.CracCreator;
-import com.toprao.crac.CracGenerationParameters;
-import com.toprao.crac.TopRaoCracCreator;
 import com.toprao.redispatch.result.ActionSummary;
 import com.toprao.redispatch.result.ActionType;
 import com.toprao.redispatch.result.CnecSummary;
 import com.toprao.redispatch.result.RaoSummary;
-import com.toprao.sa.SaResultsConverter;
-import com.toprao.sa.SecurityAnalysisRunner;
-import com.toprao.toop.data.ToOpLfResult;
-import com.toprao.toop.data.ToOpN1Definition;
-import lombok.NonNull;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.OffsetDateTime;
@@ -47,49 +39,27 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 @Slf4j
-public final class RedispatchComputation {
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
+public class RedispatchComputation {
 
-    private RedispatchComputation() {
-    }
+    Network network;
+    RodaParameters forcedActions;
+    RaoParameters raoParameters;
+    CracCreator cracCreator;
 
-    public static final int CPUS_COUNT = 1;
+    public RaoSummary compute() {
+        log.info("Generating Crac");
+        Crac crac = cracCreator.create(network);
+        log.info("Crac generated");
+        log.info("Nb of CNECs : {}", crac.getCnecs().size());
+        log.info("Nb of preventive CNECs: {}", crac.getCnecs().stream().filter(c -> c.getState().isPreventive()).count());
+        log.info("Nb of curative CNECs : {}", crac.getCnecs().stream().filter(c -> !c.getState().isPreventive()).count());
+        log.info("Nb of injection actions : {}", crac.getInjectionRangeActions().size());
+        log.info("Nb of pst actions : {}", crac.getPstRangeActions().size());
 
-    public static RaoSummary compute(@NonNull Network network,
-                               @NonNull ToOpN1Definition n1Definition,
-                               @NonNull RodaParameters forcedActions,
-                               @NonNull RaoParameters raoParameters,
-                               @NonNull CracGenerationParameters cracGenerationParameters) {
-
-        // Run SA to generate ToOpLfResult
-        String initialVariantId = network.getVariantManager().getWorkingVariantId();
-        String saVariantId = "SA_run";
-        network.getVariantManager().cloneVariant(initialVariantId, saVariantId, true);
-        network.getVariantManager().setWorkingVariant(saVariantId);
-
-        List<Action> networkActions = forcedActions.getForcedPreventiveActions();
-        if (!networkActions.isEmpty()) {
-            networkActions.forEach(na -> na.toModification().apply(network));
-        }
-        ToOpLfResult toOpLfResult = runSa(network, n1Definition);
-        network.getVariantManager().setWorkingVariant(initialVariantId);
-        network.getVariantManager().removeVariant(saVariantId);
-
-        return compute(network, n1Definition, toOpLfResult, forcedActions, raoParameters, cracGenerationParameters);
-    }
-
-    public static RaoSummary compute(@NonNull Network network,
-                               @NonNull ToOpN1Definition n1Definition,
-                               @NonNull ToOpLfResult lfResult,
-                               @NonNull RodaParameters forcedActions,
-                               @NonNull RaoParameters raoParameters,
-                               @NonNull CracGenerationParameters cracGenerationParameters) {
-        lfResult.validateCnecResults(n1Definition);
         addRodaParameters(raoParameters, forcedActions);
-
-        CracCreator cracCreator = new TopRaoCracCreator(cracGenerationParameters, n1Definition, lfResult);
         RaoRunner raoRunner = new RaoRunner();
-        TimeCoupledRaoResult raoResult = raoRunner.run(network, cracCreator, raoParameters);
-
+        TimeCoupledRaoResult raoResult = raoRunner.run(network, crac, raoParameters);
         return createRaoSummary(raoResult, raoRunner.getTimeRaoInput());
 
     }
@@ -174,13 +144,5 @@ public final class RedispatchComputation {
             raoParameters.removeExtension(RodaParameters.class);
         }
         raoParameters.addExtension(RodaParameters.class, forcedActions);
-    }
-
-    private static ToOpLfResult runSa(Network network, ToOpN1Definition n1Definition) {
-        log.info("N-1 LF results not provided, running security analysis on N-1 definition");
-        var saResult = new SecurityAnalysisRunner().run(network, n1Definition, CPUS_COUNT);
-        List<PostContingencyResult> nonConvergedResults = saResult.getPostContingencyResults().stream().filter(r -> r.getStatus() != PostContingencyComputationStatus.CONVERGED).toList();
-        log.info("Security analysis run finished with {} non converged contingencies", nonConvergedResults.size());
-        return new SaResultsConverter().convertResults(saResult, network);
     }
 }

@@ -9,14 +9,28 @@
 
 package com.toprao.cli;
 
+import lombok.NonNull;
+
 import java.util.Optional;
 
-public record RedispatchCliOptions(String networkFilePath,
-                                   String n1DefFilePath,
-                                   Optional<String> lfResultsFilePath,
-                                   Optional<String> topologicalAction,
-                                   Optional<String> raoParametersFilePath,
-                                   Optional<String> cracGenerationParametersPath,
-                                   String outputPath) {
+public final class RedispatchCliOptions extends AbstractTopRaoCliOptions {
+
+    private final String raoParametersFilePath;
+
+    public RedispatchCliOptions(@NonNull String networkFilePath,
+                                @NonNull String n1DefFilePath,
+                                @NonNull String outputPath,
+                                String lfResultsFilePath,
+                                String topologicalAction,
+                                String cracGenerationParametersPath,
+                                String raoParametersFilePath
+                                ) {
+        super(networkFilePath, n1DefFilePath, outputPath, lfResultsFilePath, topologicalAction, cracGenerationParametersPath);
+        this.raoParametersFilePath = raoParametersFilePath;
+    }
+
+    public Optional<String> getRaoParametersFilePath() {
+        return Optional.ofNullable(raoParametersFilePath);
+    }
 
 }

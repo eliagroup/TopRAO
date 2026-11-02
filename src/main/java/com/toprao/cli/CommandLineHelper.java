@@ -17,11 +17,10 @@ import org.apache.commons.cli.help.HelpFormatter;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.util.Optional;
 
 public final class CommandLineHelper {
 
-    public static final String CMD_LINE_SYNTAX = "java -jar TopRao.jar";
+    public static final String CMD_LINE_SYNTAX = "java -jar TopRao.jar <command>";
     public static final String HELP_OPT = "help";
     public static final String GRID_OPT = "grid";
     public static final String N1DEF_OPT = "n1_definition";
@@ -36,10 +35,40 @@ public final class CommandLineHelper {
 
     private CommandLineHelper() { }
 
-    public static RedispatchCliOptions parseCommandLineOptions(String[] args, HelpFormatter formatter) {
-        Options options = buildCommandLineOptions();
+    public static RedispatchCliOptions parseRedispatchCommandLineOptions(String[] args, HelpFormatter formatter) {
+        Options options = getParserOptionsRedispatch();
 
-        org.apache.commons.cli.CommandLineParser parser = new CommandLineParser(HELP_OPT);
+        CommandLineParser parser = new CommandLineParser(HELP_OPT);
+        CommandLine cmd;
+        try {
+            cmd = parser.parse(options, args);
+        } catch (ParseException e) {
+            printHelp(formatter, options);
+            throw new IllegalArgumentException("Input arguments incorrect, check help message");
+        }
+
+        if (cmd.hasOption(HELP_OPT)) {
+            printHelp(formatter, options);
+            return null;
+        }
+
+        String networkFilePath = readRequired(cmd, GRID_OPT);
+        String n1DefFilePath = readRequired(cmd, N1DEF_OPT);
+
+        String lfResultsFilePath = readOptional(cmd, LF_RESULT_OPT);
+        String topologicalAction = readOptional(cmd, TOPO_ACTION_OPT);
+        String raoParametersFilePath = readOptional(cmd, RAO_PARAMETERS_OPT);
+        String cracGenerationParametersFilePath = readOptional(cmd, CRAC_GENERATION_PARAMETERS_OPT);
+
+        String outputPath = readRequired(cmd, OUTPUT_OPT);
+
+        return new RedispatchCliOptions(networkFilePath, n1DefFilePath, outputPath, lfResultsFilePath, topologicalAction, cracGenerationParametersFilePath, raoParametersFilePath);
+    }
+
+    public static CracGenerationCliOptions parseCracGenerationCommandLineOptions(String[] args, HelpFormatter formatter) {
+        Options options = getParserOptionsCracConversion();
+
+        CommandLineParser parser = new CommandLineParser(HELP_OPT);
         CommandLine cmd;
 
         try {
@@ -57,22 +86,21 @@ public final class CommandLineHelper {
         String networkFilePath = readRequired(cmd, GRID_OPT);
         String n1DefFilePath = readRequired(cmd, N1DEF_OPT);
 
-        Optional<String> lfResultsFilePath = readOptional(cmd, LF_RESULT_OPT);
-        Optional<String> topologicalActionFilePath = readOptional(cmd, TOPO_ACTION_OPT);
-        Optional<String> raoParametersFilePath = readOptional(cmd, RAO_PARAMETERS_OPT);
-        Optional<String> cracGenerationParametersFilePath = readOptional(cmd, CRAC_GENERATION_PARAMETERS_OPT);
+        String lfResultsFilePath = readOptional(cmd, LF_RESULT_OPT);
+        String topologicalActionFilePath = readOptional(cmd, TOPO_ACTION_OPT);
+        String cracGenerationParametersFilePath = readOptional(cmd, CRAC_GENERATION_PARAMETERS_OPT);
 
         String outputPath = readRequired(cmd, OUTPUT_OPT);
 
-        return new RedispatchCliOptions(networkFilePath, n1DefFilePath, lfResultsFilePath, topologicalActionFilePath, raoParametersFilePath, cracGenerationParametersFilePath, outputPath);
+        return new CracGenerationCliOptions(networkFilePath, n1DefFilePath, outputPath, lfResultsFilePath, topologicalActionFilePath, cracGenerationParametersFilePath);
     }
 
-    private static void printHelp(HelpFormatter formatter, Options options) {
+    protected static void printHelp(HelpFormatter formatter, Options opts) {
         String header = "";
         String footer = "";
 
         try {
-            formatter.printHelp(CMD_LINE_SYNTAX, header, options, footer, true);
+            formatter.printHelp(CMD_LINE_SYNTAX, header, opts, footer, true);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -86,19 +114,18 @@ public final class CommandLineHelper {
 
     private static void checkRequiredOption(String input, String optName) {
         if (input == null) {
-            throw new IllegalArgumentException("Argument %s is not defined. Chexk --help for more information".formatted(optName));
+            throw new IllegalArgumentException("Argument %s is not defined. Check --help for more information".formatted(optName));
         }
     }
 
-    private static Optional<String> readOptional(CommandLine cmd, String option) {
-        Optional<String> input = Optional.empty();
+    private static String readOptional(CommandLine cmd, String option) {
         if (cmd.hasOption(option)) {
-            input = Optional.of(cmd.getOptionValue(option));
+            return cmd.getOptionValue(option);
         }
-        return input;
+        return null;
     }
 
-    static Options buildCommandLineOptions() {
+    static Options getParserOptionsRedispatch() {
         Options options = new Options();
         Option helpOption = new Option(HELP_OPT.substring(0, 1), HELP_OPT, false, "Print this help message");
         options.addOption(helpOption);
@@ -122,6 +149,34 @@ public final class CommandLineHelper {
         Option raoParametersOpt = new Option(RAO_PARAMETERS_OPT.substring(0, 1), RAO_PARAMETERS_OPT, true, "Path to the RAO parameters JSON file (optional)");
         raoParametersOpt.setRequired(false);
         options.addOption(raoParametersOpt);
+
+        Option cracGenerationOpt = new Option(CRAC_GENERATION_PARAMETERS_OPT.substring(0, 1), CRAC_GENERATION_PARAMETERS_OPT, true, "Path to the crac generation parameters JSON file (optional)");
+        cracGenerationOpt.setRequired(false);
+        options.addOption(cracGenerationOpt);
+
+        Option outputOption = new Option(OUTPUT_OPT.substring(0, 1), OUTPUT_OPT, true, "Path to the desired output directory");
+        outputOption.setRequired(true);
+        options.addOption(outputOption);
+
+        return options;
+    }
+
+    static Options getParserOptionsCracConversion() {
+        Options options = new Options();
+        Option helpOption = new Option(HELP_OPT.substring(0, 1), HELP_OPT, false, "Print this help message");
+        options.addOption(helpOption);
+
+        Option gridOpt = new Option(GRID_OPT.substring(0, 1), GRID_OPT, true, "Path to the input grid IIDM file");
+        gridOpt.setRequired(true);
+        options.addOption(gridOpt);
+
+        Option n1DefOpt = new Option(N1DEF_OPT.substring(0, 1), N1DEF_OPT, true, "Path to the N-1 definition JSON file");
+        n1DefOpt.setRequired(true);
+        options.addOption(n1DefOpt);
+
+        Option lfResultOpt = new Option(LF_RESULT_OPT.substring(0, 1), LF_RESULT_OPT, true, "Path to the load flow results parquet file (optional)");
+        lfResultOpt.setRequired(false);
+        options.addOption(lfResultOpt);
 
         Option cracGenerationOpt = new Option(CRAC_GENERATION_PARAMETERS_OPT.substring(0, 1), CRAC_GENERATION_PARAMETERS_OPT, true, "Path to the crac generation parameters JSON file (optional)");
         cracGenerationOpt.setRequired(false);

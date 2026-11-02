@@ -10,7 +10,6 @@
 package com.toprao.redispatch;
 
 import com.powsybl.iidm.network.Network;
-import com.powsybl.openrao.roda.parameters.RodaParameters;
 import com.toprao.JsonUtils;
 import com.toprao.crac.CracGenerationParameters;
 import com.toprao.crac.RedispatchAction;
@@ -46,7 +45,6 @@ public class RedispatchComputationTest {
     private Network network;
     private ToOpN1Definition n1Definition;
     private ToOpLfResult lfResult;
-    private RodaParameters forcedActions;
     private CracGenerationParameters cracGenerationParameters;
 
     @BeforeEach
@@ -54,13 +52,12 @@ public class RedispatchComputationTest {
         network = NetworkImportsUtil.import2NodesNetwork();
         n1Definition = JsonUtils.read(getClass().getResourceAsStream("/redispatch/2nodes/n1_definition_2nodes.json"), ToOpN1Definition.class);
         lfResult = JsonUtils.read(getClass().getResourceAsStream("/redispatch/2nodes/branch_results.json"), ToOpLfResult.class);
-        forcedActions = new RodaParameters(List.of());
         cracGenerationParameters = new CracGenerationParameters();
     }
 
     @Test
     void runRedispatch2Nodes() {
-        RaoSummary raoSummary = compute(lfResult);
+        RaoSummary raoSummary = compute();
 
         assertThat(raoSummary.isSecure()).isTrue();
 
@@ -77,7 +74,7 @@ public class RedispatchComputationTest {
 
     @Test
     void runRedispatch2NodesWithSA() {
-        RaoSummary raoSummary = compute(null);
+        RaoSummary raoSummary = compute();
 
         assertThat(raoSummary.isSecure()).isTrue();
 
@@ -95,7 +92,7 @@ public class RedispatchComputationTest {
     @Test
     void runRedispatch2NodesFixedIncompleteLfResultFixed() {
         lfResult = JsonUtils.read(getClass().getResourceAsStream("/redispatch/2nodes/branch_results_incomplete_fix.json"), ToOpLfResult.class);
-        RaoSummary raoSummary = compute(lfResult);
+        RaoSummary raoSummary = compute();
 
         assertThat(raoSummary.isSecure()).isTrue();
         assertThat(raoSummary.getLimitingElements()).hasSize(4);
@@ -112,7 +109,7 @@ public class RedispatchComputationTest {
     @Test
     void runRedispatch2NodesFixedIncompleteLfResultNotFixable() {
         lfResult = JsonUtils.read(getClass().getResourceAsStream("/redispatch/2nodes/branch_results_incomplete_no_fix.json"), ToOpLfResult.class);
-        RaoSummary raoSummary = compute(lfResult);
+        RaoSummary raoSummary = compute();
 
         assertThat(raoSummary.isSecure()).isTrue();
         assertThat(raoSummary.getLimitingElements()).hasSize(3);
@@ -131,7 +128,7 @@ public class RedispatchComputationTest {
                 new RedispatchAction("action_fr_1", "GENERATOR_FR_1", 2, 2, 2, 5000, 0),
                 new RedispatchAction("action_be_1", "GENERATOR_BE_1.1", 4, 3, 3, 5000, 0)));
 
-        RaoSummary raoSummary = compute(lfResult);
+        RaoSummary raoSummary = compute();
 
         assertThat(raoSummary.getActions()).hasSize(2);
         assertAction(raoSummary.getActions().get(0), "action_be_1", 310, 934);
@@ -149,7 +146,7 @@ public class RedispatchComputationTest {
                 new RedispatchAction("be_1", Map.of("GENERATOR_BE_1.1", 0.7, "GENERATOR_BE_1.2", 0.3),
                         4, 3, 3, 5000, 0)));
 
-        RaoSummary raoSummary = compute(lfResult);
+        RaoSummary raoSummary = compute();
 
         assertThat(raoSummary.getActions()).hasSize(2);
         assertAction(raoSummary.getActions().get(0), "be_1", 292.666, 882);
@@ -162,14 +159,12 @@ public class RedispatchComputationTest {
         assertThat(network.getGenerator("GENERATOR_FR_2").getTargetP()).isCloseTo(266.6, OFFSET);
     }
 
-    private RaoSummary compute(ToOpLfResult lfResults) {
-        if (lfResults == null) {
-            // No LF result input
-            return RedispatchComputation.compute(network, n1Definition, forcedActions,
-                    RaoParametersFactory.loadDefault(), cracGenerationParameters);
-        }
-        return RedispatchComputation.compute(network, n1Definition, lfResults, forcedActions,
-                RaoParametersFactory.loadDefault(), cracGenerationParameters);
+    private RaoSummary compute() {
+        return new RedispatchComputationBuilder(network, n1Definition)
+                .setLfResult(lfResult)
+                .setCracGenerationParameters(cracGenerationParameters)
+                .build()
+                .compute();
     }
 
     static void assertLimitingElement(CnecSummary cnec, String elementName, String contingencyName, double margin, String unit) {

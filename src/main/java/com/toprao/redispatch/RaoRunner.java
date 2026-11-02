@@ -21,7 +21,6 @@ import com.powsybl.openrao.raoapi.RaoInput;
 import com.powsybl.openrao.raoapi.TimeCoupledRao;
 import com.powsybl.openrao.raoapi.TimeCoupledRaoInput;
 import com.powsybl.openrao.raoapi.parameters.RaoParameters;
-import com.toprao.crac.CracCreator;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,17 +37,9 @@ public class RaoRunner {
 
     private TimeCoupledRaoInput timeRaoInput = null;
 
-    public TimeCoupledRaoResult run(Network network, CracCreator cracCreator, RaoParameters parameters) {
+    public TimeCoupledRaoResult run(Network network, Crac crac, RaoParameters parameters) {
         log.info("Preprocessing network");
         preprocessNetwork(network);
-        log.info("Generating Crac");
-        Crac crac = cracCreator.generateCrac(network);
-        log.info("Crac generated");
-        log.info("Nb of CNECs : {}", crac.getCnecs().size());
-        log.info("Nb of preventive CNECs: {}", crac.getCnecs().stream().filter(c -> c.getState().isPreventive()).count());
-        log.info("Nb of curative CNECs : {}", crac.getCnecs().stream().filter(c -> !c.getState().isPreventive()).count());
-        log.info("Nb of range actions : {}", crac.getRangeActions().size());
-
         log.info("Starting RAO computation");
         RaoInput raoInput = RaoInput.build(network, crac).build();
         return run(raoInput, parameters);

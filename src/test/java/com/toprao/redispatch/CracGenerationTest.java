@@ -23,7 +23,7 @@ import com.powsybl.openrao.data.crac.api.rangeaction.VariationDirection;
 import com.toprao.crac.CracCreator;
 import com.toprao.crac.CracGenerationParameters;
 import com.toprao.crac.RedispatchAction;
-import com.toprao.crac.TopRaoCracCreator;
+import com.toprao.crac.TopRaoCracCreatorBuilder;
 import com.toprao.toop.data.ToOpCnecResult;
 import com.toprao.toop.data.ToOpContingency;
 import com.toprao.toop.data.ToOpGridElement;
@@ -48,17 +48,19 @@ public class CracGenerationTest {
     private ToOpLfResult lfResult;
     private CracGenerationParameters parameters;
 
-    private void initFourBus() {
+    private CracCreator initFourBus() {
         network = TestNetworkFactory.createFourBusNetwork();
 
         parameters = new CracGenerationParameters();
 
         branch1 = toGridElement(network.getLine("l14"));
+
+        ToOpContingency basecase = new ToOpContingency("BASECASE", null, List.of());
         contingency1 = toContingency(network.getLine("l12"));
         contingency2 = toContingency(network.getLine("l13"));
 
         List<ToOpGridElement> monitoredElements = List.of(branch1);
-        List<ToOpContingency> contingencies = List.of(contingency1, contingency2);
+        List<ToOpContingency> contingencies = List.of(basecase, contingency1, contingency2);
 
         n1Definition = new ToOpN1Definition(monitoredElements, contingencies, null);
 
@@ -67,9 +69,14 @@ public class CracGenerationTest {
                 contingencyResult(branch1, contingency2, 0.98, 49));
 
         lfResult = new ToOpLfResult(cnecResults);
+
+        return new TopRaoCracCreatorBuilder(n1Definition)
+                .setCracGenerationParameters(parameters)
+                .setLfResult(lfResult)
+                .build();
     }
 
-    private void initPst() {
+    private CracCreator initPst() {
         network = TestNetworkFactory.createWithPst();
 
         branch1 = toGridElement(network.getLine("L2"));
@@ -87,13 +94,17 @@ public class CracGenerationTest {
 
         parameters = new CracGenerationParameters();
         parameters.setRedispatchActionsActive(false);
+
+        return new TopRaoCracCreatorBuilder(n1Definition)
+                .setCracGenerationParameters(parameters)
+                .setLfResult(lfResult)
+                .build();
     }
 
     @Test
     void defaultParameters() {
-        initFourBus();
-        CracCreator cracCreator = new TopRaoCracCreator(parameters, n1Definition, lfResult);
-        Crac crac = cracCreator.generateCrac(network);
+        CracCreator cracCreator = initFourBus();
+        Crac crac = cracCreator.create(network);
 
         // Preventive cnec is kept
         Cnec<?> basCaseCnec = crac.getCnec("l14_preventive");
@@ -118,22 +129,20 @@ public class CracGenerationTest {
 
     @Test
     void allContingencyCnecsFiltered() {
-        initFourBus();
+        CracCreator cracCreator = initFourBus();
         parameters.setAffectedCnecMinActivePowerDiff(10);
         parameters.setAffectedCnecMinLoadingDiff(0.3);
-        CracCreator cracCreator = new TopRaoCracCreator(parameters, n1Definition, lfResult);
-        Crac crac = cracCreator.generateCrac(network);
+        Crac crac = cracCreator.create(network);
 
         assertThat(crac.getCnecs()).containsExactlyInAnyOrder(crac.getCnec("l14_preventive"));
     }
 
     @Test
     void cnecFilteredByLoading() {
-        initFourBus();
+        CracCreator cracCreator = initFourBus();
         parameters.setAffectedCnecMinActivePowerDiff(0);
         parameters.setAffectedCnecMinLoadingDiff(0.13);
-        CracCreator cracCreator = new TopRaoCracCreator(parameters, n1Definition, lfResult);
-        Crac crac = cracCreator.generateCrac(network);
+        Crac crac = cracCreator.create(network);
 
         // cnec l14 + CO l12 filtered : p diff = 6 (>0) BUT loading diff = 0.12 (<0.13)
         assertThat(crac.getCnecs()).containsExactlyInAnyOrder(
@@ -143,12 +152,10 @@ public class CracGenerationTest {
 
     @Test
     void cnecFilteredByActivePower() {
-        initFourBus();
+        CracCreator cracCreator = initFourBus();
         parameters.setAffectedCnecMinActivePowerDiff(7);
         parameters.setAffectedCnecMinLoadingDiff(0);
-        CracCreator cracCreator = new TopRaoCracCreator(parameters, n1Definition, lfResult);
-        Crac crac = cracCreator.generateCrac(network);
-
+        Crac crac = cracCreator.create(network);
         // cnec l14 + CO l12 filtered : loading diff = 0.08 (>0) BUT p diff = 6 (<7)
         assertThat(crac.getCnecs()).containsExactlyInAnyOrder(
                 crac.getCnec("l14_CO_l13_outage"),
@@ -156,15 +163,18 @@ public class CracGenerationTest {
     }
 
     @Test
+    /**
+     * Tests that a branch is kept in the CRAC if the loading exceeds the threshold only on one side
+     */
     void keepBranchHasRequiredDiffOnOneSide() {
-        initFourBus();
+        CracCreator cracCreator = initFourBus();
+        parameters.setAffectedCnecMinActivePowerDiff(7);
         List<ToOpCnecResult> cnecResults = List.of(baseCaseResult(branch1, 1, 0.8, 40),
                 baseCaseResult(branch1, 2, 0.8, 40),
                 contingencyResult(branch1, contingency2, 1, 0.8, 40),
                 contingencyResult(branch1, contingency2, 2, 0.98, 49));
         lfResult = new ToOpLfResult(cnecResults);
-        CracCreator cracCreator = new TopRaoCracCreator(parameters, n1Definition, lfResult);
-        Crac crac = cracCreator.generateCrac(network);
+        Crac crac = cracCreator.create(network);
         assertThat(crac.getCnecs()).containsExactlyInAnyOrder(
                 crac.getCnec("l14_CO_l13_outage"),
                 crac.getCnec("l14_preventive"));
@@ -175,7 +185,7 @@ public class CracGenerationTest {
                 contingencyResult(branch1, contingency2, 2, 0.8, 40),
                 contingencyResult(branch1, contingency2, 1, 0.98, 49));
         lfResult = new ToOpLfResult(cnecResults);
-        Crac crac2 = cracCreator.generateCrac(network);
+        Crac crac2 = cracCreator.create(network);
         assertThat(crac2.getCnecs()).containsExactlyInAnyOrder(
                 crac2.getCnec("l14_CO_l13_outage"),
                 crac2.getCnec("l14_preventive"));
@@ -183,20 +193,18 @@ public class CracGenerationTest {
 
     @Test
     void monitoredBranchIgnoredWhenNoLimits() {
-        initFourBus();
+        CracCreator cracCreator = initFourBus();
         network.getLine("l14").getOrCreateSelectedOperationalLimitsGroup1().removeActivePowerLimits();
         network.getLine("l14").getOrCreateSelectedOperationalLimitsGroup2().removeActivePowerLimits();
-        CracCreator cracCreator = new TopRaoCracCreator(parameters, n1Definition, lfResult);
-        Crac crac = cracCreator.generateCrac(network);
+        Crac crac = cracCreator.create(network);
         assertThat(crac.getCnecs()).hasSize(0);
     }
 
     @Test
     void monitoredBranchOneSideLimitAccepted() {
-        initFourBus();
+        CracCreator cracCreator = initFourBus();
         network.getLine("l14").getOrCreateSelectedOperationalLimitsGroup1().removeActivePowerLimits();
-        CracCreator cracCreator = new TopRaoCracCreator(parameters, n1Definition, lfResult);
-        Crac crac = cracCreator.generateCrac(network);
+        Crac crac = cracCreator.create(network);
         assertThat(crac.getCnecs()).hasSize(3);
     }
 
@@ -205,16 +213,19 @@ public class CracGenerationTest {
         initFourBus();
         network.getLine("l14").getOrCreateSelectedOperationalLimitsGroup1().removeActivePowerLimits();
         network.getLine("l14").getOrCreateSelectedOperationalLimitsGroup1().newCurrentLimits().setPermanentLimit(2).add();
-        CracCreator cracCreator = new TopRaoCracCreator(parameters, n1Definition, lfResult);
-        Crac crac = cracCreator.generateCrac(network);
+//        CracCreator cracCreator = new TopRaoCracCreator(parameters, n1Definition, lfResult);
+        CracCreator cracCreator = new TopRaoCracCreatorBuilder(n1Definition)
+                .setLfResult(lfResult)
+                .setCracGenerationParameters(parameters)
+                .build();
+        Crac crac = cracCreator.create(network);
         assertThat(crac.getCnecs()).hasSize(3);
     }
 
     @Test
     void generatorRemedialActions() {
-        initFourBus();
-        CracCreator cracCreator = new TopRaoCracCreator(parameters, n1Definition, lfResult);
-        Crac crac = cracCreator.generateCrac(network);
+        CracCreator cracCreator = initFourBus();
+        Crac crac = cracCreator.create(network);
 
         RangeAction<?> actionG1 = crac.getRangeAction("RD_GEN_g1_preventive");
         RangeAction<?> actionG4 = crac.getRangeAction("RD_GEN_g4_preventive");
@@ -233,18 +244,16 @@ public class CracGenerationTest {
 
     @Test
     void generatorRemedialActionsDeactivated() {
-        initFourBus();
+        CracCreator cracCreator = initFourBus();
         parameters.setRedispatchActionsActive(false);
-        CracCreator cracCreator = new TopRaoCracCreator(parameters, n1Definition, lfResult);
-        Crac crac = cracCreator.generateCrac(network);
+        Crac crac = cracCreator.create(network);
         assertThat(crac.getRangeActions()).isEmpty();
     }
 
     @Test
     void generatorRemedialActionsSetPointsFixed() {
-        initFourBus();
-        CracCreator cracCreator = new TopRaoCracCreator(parameters, n1Definition, lfResult);
-        Crac crac = cracCreator.generateCrac(network);
+        CracCreator cracCreator = initFourBus();
+        Crac crac = cracCreator.create(network);
 
         InjectionRangeAction actionG1 = crac.getInjectionRangeAction("RD_GEN_g1_preventive");
 
@@ -262,9 +271,8 @@ public class CracGenerationTest {
 
     @Test
     void generatorRemedialActionsDefaultCosts() {
-        initFourBus();
-        CracCreator cracCreator = new TopRaoCracCreator(parameters, n1Definition, lfResult);
-        Crac crac = cracCreator.generateCrac(network);
+        CracCreator cracCreator = initFourBus();
+        Crac crac = cracCreator.create(network);
 
         InjectionRangeAction actionG1 = crac.getInjectionRangeAction("RD_GEN_g1_preventive");
 
@@ -275,13 +283,12 @@ public class CracGenerationTest {
 
     @Test
     void generatorRemedialActionsCosts() {
-        initFourBus();
+        CracCreator cracCreator = initFourBus();
         parameters.setRedispatchCostUp(2);
         parameters.setRedispatchCostDown(3);
         parameters.setRedispatchActivationCost(33);
 
-        CracCreator cracCreator = new TopRaoCracCreator(parameters, n1Definition, lfResult);
-        Crac crac = cracCreator.generateCrac(network);
+        Crac crac = cracCreator.create(network);
 
         InjectionRangeAction actionG1 = crac.getInjectionRangeAction("RD_GEN_g1_preventive");
 
@@ -292,42 +299,39 @@ public class CracGenerationTest {
 
     @Test
     void generatorRemedialActionsRequestedMaxP() {
-        initFourBus();
+        CracCreator cracCreator = initFourBus();
         parameters.setRedispatchGeneratorRequiredMaxP(65);
-        CracCreator cracCreator = new TopRaoCracCreator(parameters, n1Definition, lfResult);
-        Crac crac = cracCreator.generateCrac(network);
+        Crac crac = cracCreator.create(network);
         assertThat(crac.getRangeActions()).isEmpty();
 
         parameters.setRedispatchGeneratorRequiredMaxP(55);
-        crac = cracCreator.generateCrac(network);
+        crac = cracCreator.create(network);
         assertThat(crac.getRangeActions()).hasSize(1);
 
         parameters.setRedispatchGeneratorRequiredMaxP(45);
-        crac = cracCreator.generateCrac(network);
+        crac = cracCreator.create(network);
         assertThat(crac.getRangeActions()).hasSize(2);
     }
 
     @Test
     void generatorRemedialActionsCountries() {
-        initFourBus();
+        CracCreator cracCreator = initFourBus();
         // TODO add same test for psts
         parameters.setRangeActionsCountries(Set.of(Country.FR));
-        CracCreator cracCreator = new TopRaoCracCreator(parameters, n1Definition, lfResult);
-        Crac crac = cracCreator.generateCrac(network);
+        Crac crac = cracCreator.create(network);
         assertThat(crac.getRangeActions()).hasSize(2);
 
         parameters.setRangeActionsCountries(Set.of(Country.BE));
-        crac = cracCreator.generateCrac(network);
+        crac = cracCreator.create(network);
         assertThat(crac.getRangeActions()).isEmpty();
     }
 
     @Test
     void redispatchRemedialActionsFromList() {
-        initFourBus();
+        CracCreator cracCreator = initFourBus();
         parameters.setRedispatchActions(List.of(
                 new RedispatchAction("g1", Map.of("g1", 1.), 20, 2, 2.1, 25, 20)));
-        CracCreator cracCreator = new TopRaoCracCreator(parameters, n1Definition, lfResult);
-        Crac crac = cracCreator.generateCrac(network);
+        Crac crac = cracCreator.create(network);
 
         InjectionRangeAction actionG1 = crac.getInjectionRangeAction("g1");
 
@@ -347,10 +351,9 @@ public class CracGenerationTest {
 
     @Test
     void pstRemedialActions() {
-        initPst();
+        CracCreator cracCreator = initPst();
         parameters.setRedispatchActionsActive(false);
-        CracCreator cracCreator = new TopRaoCracCreator(parameters, n1Definition, lfResult);
-        Crac crac = cracCreator.generateCrac(network);
+        Crac crac = cracCreator.create(network);
 
         PstRangeAction actionPst1 = crac.getPstRangeAction("PST_RA_PS1_preventive");
         assertThat(crac.getRangeActions()).containsExactlyInAnyOrder(actionPst1);
@@ -369,10 +372,9 @@ public class CracGenerationTest {
 
     @Test
     void pstRemedialActionsDisabled() {
-        initPst();
+        CracCreator cracCreator = initPst();
         parameters.setPstActionsActive(false);
-        CracCreator cracCreator = new TopRaoCracCreator(parameters, n1Definition, lfResult);
-        Crac crac = cracCreator.generateCrac(network);
+        Crac crac = cracCreator.create(network);
         assertThat(crac.getRangeActions()).isEmpty();
     }
     // todo test pst actions countries filter

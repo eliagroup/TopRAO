@@ -9,6 +9,9 @@
 
 package com.toprao.cli;
 
+import com.powsybl.iidm.network.Network;
+import com.powsybl.openrao.data.crac.api.Crac;
+import com.powsybl.openrao.data.crac.api.Identifiable;
 import com.toprao.JsonUtils;
 import com.toprao.redispatch.result.RaoSummary;
 import org.apache.commons.cli.help.HelpAppendable;
@@ -17,7 +20,10 @@ import org.apache.commons.cli.help.TextHelpAppendable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -81,6 +87,32 @@ public class CliTest {
     }
 
     @Test
+    void runCracConversionWithAllDefaults(@TempDir Path tempPath) throws IOException {
+        String gridPath = getClass().getResource("/redispatch/2nodes/TestCase2Nodes.xiidm").getPath();
+        String n1DefinitionPath = getClass().getResource("/redispatch/2nodes/n1_definition_2nodes.json").getPath();
+
+        String[] args = {"-g", gridPath, "-n", n1DefinitionPath, "-o", tempPath.toAbsolutePath().toString()};
+        Main.generateCrac(args);
+
+        Network network = Network.read(gridPath);
+
+        Crac crac = Crac.read("crac.json", new FileInputStream(tempPath.resolve("crac.json").toString()), network);
+
+        assertThat(crac.getContingencies()).hasSize(2);
+        assertThat(crac.getContingency("CO_France-Belgium interconnection n°1").getElements()).hasSize(1);
+        assertThat(crac.getContingency("CO_France-Belgium interconnection n°2").getElements()).hasSize(1);
+
+        assertThat(crac.getRangeActions()).hasSize(4);
+        assertThat(crac.getInjectionRangeActions()).hasSize(4);
+        List<String> actionIds = crac.getInjectionRangeActions().stream().map(Identifiable::getId).toList();
+        assertThat(actionIds).containsExactly(
+                "RD_GEN_GENERATOR_BE_1.1_preventive",
+                "RD_GEN_GENERATOR_BE_1.2_preventive",
+                "RD_GEN_GENERATOR_FR_2_preventive",
+                "RD_GEN_GENERATOR_FR_1_preventive");
+    }
+
+    @Test
     void testHelpMessage() {
         StringBuilder output = new StringBuilder();
         HelpAppendable helpAppendable = new TextHelpAppendable(output);
@@ -90,11 +122,11 @@ public class CliTest {
                 .get();
 
         String[] args = {"-h"};
-        CommandLineHelper.parseCommandLineOptions(args, formatter);
+        CommandLineHelper.parseRedispatchCommandLineOptions(args, formatter);
         String helpOutput = output.toString();
         assertThat(helpOutput).isEqualTo("""
-              usage:  java -jar TopRao.jar [-c <arg>] -g <arg> [-h] [-l <arg>] -n <arg>
-                 -o <arg> [-r <arg>] [-t <arg>]
+              usage:  java -jar TopRao.jar <command> [-c <arg>] -g <arg> [-h] [-l <arg>]
+                 -n <arg> -o <arg> [-r <arg>] [-t <arg>]
 
                              Options                     Since           Description      \s
               -h, --help                                  --       Print this help message\s
