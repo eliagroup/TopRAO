@@ -25,7 +25,6 @@ import com.toprao.toop.data.ToOpN1Definition;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.cli.help.HelpFormatter;
 
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.nio.file.Path;
 
@@ -53,9 +52,12 @@ public final class Main {
                 case "redispatch":
                     runRedispatch(cmdArgs);
                     break;
+                default:
+                    log.error("Supported commands are \"crac\" or \"redispatch\"");
+
             }
         } catch (Exception e) {
-            System.err.println(e.getMessage());
+            log.error(e.getMessage());
             System.exit(1);
         }
     }
@@ -135,10 +137,9 @@ public final class Main {
         log.info("Nb of pst actions : {}", crac.getPstRangeActions().size());
 
         // todo write crac
-        try {
-            FileOutputStream outputStream = new FileOutputStream(opts.getOutputPath() + "/crac.json");
+        try (FileOutputStream outputStream = new FileOutputStream(opts.getOutputPath() + "/crac.json")) {
             crac.write("JSON", outputStream);
-        } catch (FileNotFoundException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
 

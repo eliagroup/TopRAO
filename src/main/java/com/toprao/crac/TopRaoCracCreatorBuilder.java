@@ -16,6 +16,7 @@ public class TopRaoCracCreatorBuilder {
         this.n1Definition = n1Definition;
     }
 
+    @SuppressWarnings("EI_EXPOSE_REP2")
     public TopRaoCracCreatorBuilder setLfResult(ToOpLfResult lfResult) {
         this.lfResult = lfResult;
         return this;

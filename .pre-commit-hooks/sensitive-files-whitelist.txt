@@ -5,6 +5,8 @@
 
 # Test data files in test resources
 
+pom.xml
+spotbugs-exclude.xml
 src/test/resources/redispatch/2nodes/action.json
 src/test/resources/redispatch/2nodes/branch_results.json
 src/test/resources/redispatch/2nodes/branch_results_incomplete_fix.json

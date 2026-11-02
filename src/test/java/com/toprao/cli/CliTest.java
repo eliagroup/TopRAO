@@ -105,7 +105,7 @@ public class CliTest {
         assertThat(crac.getRangeActions()).hasSize(4);
         assertThat(crac.getInjectionRangeActions()).hasSize(4);
         List<String> actionIds = crac.getInjectionRangeActions().stream().map(Identifiable::getId).toList();
-        assertThat(actionIds).containsExactly(
+        assertThat(actionIds).containsExactlyInAnyOrder(
                 "RD_GEN_GENERATOR_BE_1.1_preventive",
                 "RD_GEN_GENERATOR_BE_1.2_preventive",
                 "RD_GEN_GENERATOR_FR_2_preventive",

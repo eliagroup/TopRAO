@@ -9,21 +9,18 @@ import com.toprao.crac.TopRaoCracCreatorBuilder;
 import com.toprao.toop.data.ToOpLfResult;
 import com.toprao.toop.data.ToOpN1Definition;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 
+@RequiredArgsConstructor
 public class RedispatchComputationBuilder {
-    Network network;
-    ToOpN1Definition n1Definition;
+    @NonNull Network network;
+    @NonNull ToOpN1Definition n1Definition;
     ToOpLfResult lfResult = null;
     RodaParameters forcedActions = null;
     RaoParameters raoParameters = null;
     CracGenerationParameters cracGenerationParameters = null;
-
-    public RedispatchComputationBuilder(@NonNull Network network, @NonNull ToOpN1Definition n1Definition) {
-        this.network = network;
-        this.n1Definition = n1Definition;
-    }
 
     public RedispatchComputationBuilder setLfResult(ToOpLfResult lfResult) {
         this.lfResult = lfResult;
