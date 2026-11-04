@@ -47,6 +47,7 @@ public class ToOpLfResult {
     }
 
     public void validateCnecResults(ToOpN1Definition n1Definition) {
+        // todo throw if no results
         filterCnecsNotInN1Def(n1Definition);
         fixNanValues();
     }
