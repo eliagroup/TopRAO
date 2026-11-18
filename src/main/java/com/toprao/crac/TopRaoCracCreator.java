@@ -134,7 +134,11 @@ public class TopRaoCracCreator implements CracCreator {
 
     protected void createRaParameters(NetworkCracCreationParameters parameters) {
         parameters.getCountertradingRangeActions().setCountryFilter(Set.of());
+        createPsts(parameters);
+        createRedispatch(parameters);
+    }
 
+    private void createPsts(NetworkCracCreationParameters parameters) {
         if (cracGenerationParameters.isPstActionsActive()) {
             parameters.getPstRangeActions().setCountryFilter(cracGenerationParameters.getRangeActionsCountries());
             parameters.getPstRangeActions().setPstRaPredicate((pst, state, context) -> state.isPreventive());
@@ -148,22 +152,34 @@ public class TopRaoCracCreator implements CracCreator {
         } else {
             parameters.getPstRangeActions().setCountryFilter(Set.of());
         }
+    }
 
+    private void createRedispatch(NetworkCracCreationParameters parameters) {
         if (cracGenerationParameters.isRedispatchActionsActive() && cracGenerationParameters.getRedispatchActions().isEmpty()) {
-            parameters.getRedispatchingRangeActions().setIncludeAllInjections(true);
-            parameters.getRedispatchingRangeActions().setCountryFilter(cracGenerationParameters.getRangeActionsCountries());
-
-            parameters.getRedispatchingRangeActions().setRdRaPredicate((injection, instant, context) -> instant.isPreventive()
-                    && injection.getType() == IdentifiableType.GENERATOR
-                    && ((Generator) injection).getMaxP() > cracGenerationParameters.getRedispatchGeneratorRequiredMaxP()
-                    && ((Generator) injection).getMaxP() < Double.MAX_VALUE
-                    && ((Generator) injection).getMinP() > -Double.MAX_VALUE);
-            parameters.getRedispatchingRangeActions().setRaCostsProvider((injection, instant) ->
-                    new RangeActionCosts(cracGenerationParameters.getRedispatchActivationCost(), cracGenerationParameters.getRedispatchCostUp(), cracGenerationParameters.getRedispatchCostDown()));
+            createRedispatchOnAllGens(parameters);
         } else {
-            parameters.getRedispatchingRangeActions().setIncludeAllInjections(false);
-            parameters.getRedispatchingRangeActions().setCountryFilter(Set.of());
+            convertRedispatchActions(parameters);
         }
+    }
+
+    private void createRedispatchOnAllGens(NetworkCracCreationParameters parameters) {
+        parameters.getRedispatchingRangeActions().setIncludeAllInjections(true);
+        parameters.getRedispatchingRangeActions().setCountryFilter(cracGenerationParameters.getRangeActionsCountries());
+
+        parameters.getRedispatchingRangeActions().setRdRaPredicate((injection, instant, context) -> instant.isPreventive()
+                && injection.getType() == IdentifiableType.GENERATOR
+                && ((Generator) injection).getMaxP() > cracGenerationParameters.getRedispatchGeneratorRequiredMaxP()
+                && ((Generator) injection).getMaxP() < Double.MAX_VALUE
+                && ((Generator) injection).getMinP() > -Double.MAX_VALUE);
+        parameters.getRedispatchingRangeActions().setRaCostsProvider((injection, instant) ->
+                new RangeActionCosts(cracGenerationParameters.getRedispatchActivationCost(), cracGenerationParameters.getRedispatchCostUp(), cracGenerationParameters.getRedispatchCostDown()));
+    }
+
+    private void convertRedispatchActions(NetworkCracCreationParameters parameters) {
+        List<RedispatchAction> actions = cracGenerationParameters.getRedispatchActions();
+
+        parameters.getRedispatchingRangeActions().setIncludeAllInjections(false);
+        parameters.getRedispatchingRangeActions().setCountryFilter(Set.of());
     }
 
     protected void createFilteredCnecParameters(NetworkCracCreationParameters parameters) {
