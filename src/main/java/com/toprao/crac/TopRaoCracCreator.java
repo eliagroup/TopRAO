@@ -173,13 +173,6 @@ public class TopRaoCracCreator implements CracCreator {
                 new RangeActionCosts(cracGenerationParameters.getRedispatchActivationCost(), cracGenerationParameters.getRedispatchCostUp(), cracGenerationParameters.getRedispatchCostDown()));
     }
 
-    private void convertRedispatchActions(NetworkCracCreationParameters parameters) {
-        List<RedispatchAction> actions = cracGenerationParameters.getRedispatchActions();
-
-        parameters.getRedispatchingRangeActions().setIncludeAllInjections(false);
-        parameters.getRedispatchingRangeActions().setCountryFilter(Set.of());
-    }
-
     protected void createFilteredCnecParameters(NetworkCracCreationParameters parameters) {
         // TODO add a warning if the branch does not have limits on both sides
         List<String> monitoredBranchesIdsBaseCase = n1Definition.getMonitoredElements().stream().map(e -> e.getId()).toList();
