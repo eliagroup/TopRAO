@@ -157,8 +157,6 @@ public class TopRaoCracCreator implements CracCreator {
     private void createRedispatch(NetworkCracCreationParameters parameters) {
         if (cracGenerationParameters.isRedispatchActionsActive() && cracGenerationParameters.getRedispatchActions().isEmpty()) {
             createRedispatchOnAllGens(parameters);
-        } else {
-            convertRedispatchActions(parameters);
         }
     }
 

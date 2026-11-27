@@ -47,7 +47,9 @@ public class ToOpLfResult {
     }
 
     public void validateCnecResults(ToOpN1Definition n1Definition) {
-        // todo throw if no results
+        if (this.index.isEmpty()) {
+            throw new RuntimeException("LF results are empty");
+        }
         filterCnecsNotInN1Def(n1Definition);
         fixNanValues();
     }
